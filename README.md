@@ -6,9 +6,9 @@ Installation steps:
 2) run `npm start`
 ### server: 
 1) `cd server`, then - `npm i`
-2.1) if you run mongo in Atlas - update MONGO_URI in your .env file 
-2.2) else - perform "To run mongo locally" steps
-3) run `npm start`
+2) if you run mongo in Atlas - update MONGO_URI in your .env file 
+3) if you run mongo locally - do "To run mongo locally" steps
+4) run `npm start`
 
 # To run mongo locally:
 1) Install Docker software from here - 
