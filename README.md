@@ -11,7 +11,7 @@ Installation steps:
 4) run `npm start`
 
 # To run mongo locally:
-1) Install Docker software from here - 
-2) Run Docker software
+1) Install Docker software from here - https://docs.docker.com/get-docker/
+2) Run Docker software on your computer
 3) in terminal run - `docker run --name mongodb -d -p 27017:27017 mongodb/mongodb-community-server:latest`
 4) Update in .env file - MONGO_URI=mongodb://localhost:27017
