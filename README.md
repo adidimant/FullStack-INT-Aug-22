@@ -15,3 +15,4 @@ Installation steps:
 2) Run Docker software on your computer
 3) in terminal run - `docker run --name mongodb -d -p 27017:27017 mongodb/mongodb-community-server:latest`
 4) Update in .env file - MONGO_URI=mongodb://localhost:27017
+- (To kill the mongo - run `docker ps`, then copy the id under the CONTAINER_ID, then run `docker kill <THE-ID-YOU-COPIED>`)
