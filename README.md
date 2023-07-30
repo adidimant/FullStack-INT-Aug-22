@@ -1,12 +1,11 @@
 # FullStack-INT-Aug-22
 
 Installation steps:
-client:
+### client:
 1) `cd client`, then - `npm i`
 2) run `npm start`
-server: 
+### server: 
 1) `cd server`, then - `npm i`
-2) 
 2.1) if you run mongo in Atlas - update MONGO_URI in your .env file 
 2.2) else - perform "To run mongo locally" steps
 3) run `npm start`
