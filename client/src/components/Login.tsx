@@ -16,7 +16,7 @@ export default function Login() {
 
   <>
     <div className='logo' style={{ display: "flex", alignItems: "center" }}>
-    <h5>Instegram </h5>
+    <h5>Instagram </h5>
     <FiInstagram
       style={{ color: "black", fontSize: "20px", margin: "5px" }}
     />
