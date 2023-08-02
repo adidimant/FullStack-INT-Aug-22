@@ -56,6 +56,14 @@ show an example of calling Promise.all, Promise.race and Promise.any about those
 * Explain at least 4 advantages for each sql/nosql database.
 
 
+# H.W 02/08:
+- Try to solve the asyncronous bug in the Session class - causing this.sessionId being undefined before initSession finished
+- Implement express middlewear for rate-limiting by IP and by username.
+it means you should track after requests from the same IPs and the same username over time windows.
+The relevant time windows (left side is seconds right side is request amount): { 5: 5, 10: 8, 20: 12, 30: 15, 60: 20, 1800: 150, 3600: 300 }
+- If you have any leftovers from the non-working application (react or server or mongo-atlas or git) - fix it!
+- open pull-request with your homework
+
 SQL databases are primarily called Relational Databases (RDBMS); whereas NoSQL databases are primarily called non-relational or distributed databases. 
 
 <!-- sql: -->
