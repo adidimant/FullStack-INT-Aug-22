@@ -67,6 +67,13 @@ app.get('/get-user-profile/:username', async (req:any, res:any) => {
 app.post('/login', async (req:any, res:any) => {
   const username = req.body.username;
   const password = req.body.password;
+
+  // const actualUser = new UserModel({
+  //   userName: username,
+  //   password,
+  // });
+  // await actualUser.save();
+
   const user = await UserModel.findOne({
     userName: username,
     password,
@@ -91,13 +98,13 @@ app.post("/upload-post", upload.single("image"), async (req, res) => {
     const { postName, description, userName, date } = req.body;
     console.log(image?.filename, postName, description, userName, date);
 
-      const newPost = new InstegramPostModel({
-        postName: postName,
-        description: description,
-        userName: userName,
-        date: date,
-        image: image?.filename,
-      });
+    const newPost = new InstegramPostModel({
+      postName: postName,
+      description: description,
+      userName: userName,
+      date: date,
+      image: image?.filename,
+    });
     await newPost.save();
     console.log(newPost);
     res.status(201);
