@@ -69,7 +69,7 @@ export default function CreatePost() {
           <Input id="date" type="date" placeholder="date" />
           <Button type="submit">Add New Post</Button>
         </Form>
-      </Container>
+      </Container> 
     </>
   );
 }
