@@ -7,6 +7,7 @@ import { Session } from "./class/Session";
 import connectDB from "./mongoose/connection_mongoDB";
 import {authenticate} from "./guards/sessionAuthenticator"
 
+
 require("dotenv").config();
 const app = express();
 const cors = require("cors");
@@ -28,7 +29,7 @@ const storage = multer.diskStorage({
     callback(null, `${file.originalname}_${Date.now()}`);
   },
 });
-const upload = multer({ storage: storage });
+const upload = multer({ storage });
 
 // client-side query example: POST: 'http://localhost:3000/update-user/3069588493'; body: { address: 'Bugrashov 7, Tel-Aviv, Israel'}
 app.post('/update-user/:username', async (req:any, res:any) => {
@@ -108,12 +109,13 @@ app.post("/upload-post", upload.single("image"), async (req, res) => {
 app.get("/getPosts", async (req, res) => {
   try {
     let response = await fetch("https://randomuser.me/api/?results=3");
-    let data = await response.json();
+    let data:any = await response.json();
     const newPosts = await InstegramPostModel.find();
 
     return res.send(data.results.concat(newPosts));
-  } catch {
-    res.render("server-error");
+  } catch(error) {
+    console.log(error);
+    // res.render("server-error");
   }
 });
 
