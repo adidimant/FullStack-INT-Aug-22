@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import { CardGroup, Container, Row } from "reactstrap";
-import { postsContext } from "../postsContext/PostConext";
+import { postsContext } from "../contexts/PostContext";
 import TopPost from "./TopPost";
 
 export default function TopPosts() {

@@ -3,11 +3,11 @@ import { Button, CardGroup, Container, Row } from "reactstrap";
 import Post from "./Post";
 import { v4 as uuidv4 } from "uuid";
 import { FiInstagram } from "react-icons/fi";
-import { postsContext } from "../postsContext/PostConext";
+import { postsContext } from "../contexts/PostContext";
 import { useNavigate } from "react-router-dom";
 
 export default function Posts() {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const postsData = useContext(postsContext);
   console.log(postsData);
   return (
