@@ -82,10 +82,13 @@ app.post('/login', async (req:any, res:any) => {
   if (!user) {
     res.status(401).send('Bad username & password combination');
   } else {
-    const session = new Session(username, expirationTime, mongoose); // this class saves the session in mongo behind the scenes - in Session constructor
-    const sessionId = session.getSessionId();
-    res.cookie('sessionId', sessionId, { maxAge: 900000, httpOnly: true });
-    res.status(200).send('Login succesfully!');
+    const session = new Session(username, expirationTime, mongoose);
+     // this class saves the session in mongo behind the scenes - in Session constructor
+      const sessionId = session.getSessionId();
+      res.cookie('sessionId', sessionId, { maxAge: 900000, httpOnly: true });
+      res.status(200).send('Login succesfully!');
+   
+   
   }
 });
 
