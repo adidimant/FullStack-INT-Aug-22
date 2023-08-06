@@ -72,11 +72,12 @@ app.post('/login', async (req:any, res:any) => {
   const username = req.body.username;
   const password = req.body.password;
 
-  const actualUser = new UserModel({
-    userName: username,
-    password,
-  });
-  await actualUser.save();
+  // Uncomment this if this is your first login - for creating your username in the db
+  // const actualUser = new UserModel({
+  //   userName: username,
+  //   password,
+  // });
+  // await actualUser.save();
 
   const user = await UserModel.findOne({
     userName: username,
