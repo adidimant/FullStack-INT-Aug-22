@@ -7,6 +7,8 @@ export class Session {
   sessionId?: string;
   expirationTime: number;
   mongoose: Mongoose;
+  private initPromise: Promise<boolean> | undefined;
+  private setInitPromise: ((successFlag: boolean) => void) | undefined;
   constructor(
     userName: string|null,
     expirationTime: number,
@@ -16,6 +18,11 @@ export class Session {
     this.userName = userName;
     this.expirationTime = expirationTime;
     this.mongoose = mongoose;
+
+    this.initPromise = new Promise((res, rej) => {
+      this.setInitPromise = res;
+    });
+
     this.initSession(sessionId);
   }
 
@@ -36,6 +43,10 @@ export class Session {
     } else {
       this.sessionId = sessionId;
     }
+
+    if (this.setInitPromise) {
+      this.setInitPromise(true);
+    }
   }
 
   public isValid(session: any): boolean {
@@ -51,22 +62,25 @@ export class Session {
     }
   }
 
-  getuserName() {
+  getUserName() {
     return this.userName;
   }
-  getSessionId() {
-    return this.sessionId;
+  async getSessionId() {
+    if (await this.initPromise) {
+      return this.sessionId;
+    }
+    return null;
   }
-  getexpirationTime() {
+  getExpirationTime() {
     return this.expirationTime;
   }
-  setuserName(userName: string) {
-    this.userName=userName;
+  setUserName(userName: string) {
+    this.userName = userName;
   }
-  setsessionId(sessionId: string) {
+  setSessionId(sessionId: string) {
     this.sessionId = sessionId;
   }
-  setexpirationTime(expirationTime: number) {
+  setExpirationTime(expirationTime: number) {
      this.expirationTime = expirationTime;
   }
 }
