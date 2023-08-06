@@ -1,13 +1,14 @@
 import express ,{Request,Response} from "express";
 import mongoose from "mongoose";
 import multer from "multer";
+import axios from 'axios';
+import cookieParser from "cookie-parser";
 import { UserModel } from "./mongoose/userSchema";
 import { InstegramPostModel } from "./mongoose/InstegramPostSchema";
 import { Session } from "./class/Session";
 import connectDB from "./mongoose/connection_mongoDB";
 import { authenticate } from "./guards/sessionAuthenticator";
 import  { rate5Limiter,rate10Limiter,rate1800Limiter,rate20Limiter,rate30Limiter,rate3600Limiter,rate60Limiter } from './guards/RateLimit';
-
 
 require("dotenv").config();
 const app = express();
@@ -19,6 +20,7 @@ connectDB();
 app.use(cors());
 app.use(express.json());
 app.use(rate5Limiter,rate10Limiter,rate20Limiter,rate30Limiter,rate60Limiter,rate1800Limiter,rate3600Limiter);
+app.use(cookieParser());
 app.set("view engine", "ejs");
 app.use("/images",express.static('Images'));
 
@@ -37,7 +39,7 @@ const upload = multer({ storage });
 app.post('/update-user/:username', async (req:any, res:any) => {
   const username = req.params.username;
   const { address, email } = req.body;
-  const { sessionId } = req.cookies;
+  const sessionId = req.cookies?.sessionId;
 
   if (await authenticate(sessionId, username, expirationTime, mongoose)) {
     // save new user data in database - by username
@@ -53,7 +55,7 @@ app.post('/update-user/:username', async (req:any, res:any) => {
 
 app.get('/get-user-profile/:username', async (req:any, res:any) => {
   const username = req.params.username;
-  const { sessionId } = req.cookies;
+  const sessionId = req.cookies?.sessionId;
 
   if (await authenticate(sessionId, username, expirationTime, mongoose)) {
     const user = await UserModel.findOne({
@@ -70,11 +72,11 @@ app.post('/login', async (req:any, res:any) => {
   const username = req.body.username;
   const password = req.body.password;
 
-  // const actualUser = new UserModel({
-  //   userName: username,
-  //   password,
-  // });
-  // await actualUser.save();
+  const actualUser = new UserModel({
+    userName: username,
+    password,
+  });
+  await actualUser.save();
 
   const user = await UserModel.findOne({
     userName: username,
@@ -86,8 +88,8 @@ app.post('/login', async (req:any, res:any) => {
   } else {
     const session = new Session(username, expirationTime, mongoose);
     // this class saves the session in mongo behind the scenes - in Session constructor
-    const sessionId = session.getSessionId();
-    res.cookie('sessionId', sessionId, { maxAge: 900000, httpOnly: true });
+    const sessionId = await session.getSessionId();
+    res.cookie('sessionId', sessionId, { maxAge: expirationTime * 60 * 60000, httpOnly: true });
     res.status(200).send('Login succesfully!');
   }
 });
@@ -121,15 +123,19 @@ app.get('/Check',(req:Request,res:Response)=>{
   res.send('good check');
 })
 
-
-
-app.get("/getPosts", async (req, res) => {
+app.get("/getPosts/:username", async (req, res) => {
+  const username = req.params.username;
+  const sessionId = req.cookies?.sessionId;
   try {
-    let response = await fetch("https://randomuser.me/api/?results=3");
-    let data:any = await response.json();
-    const newPosts = await InstegramPostModel.find();
-
-    return res.send(data.results.concat(newPosts));
+    if (await authenticate(sessionId, username, expirationTime, mongoose)) {
+      let response = await axios.get("https://randomuser.me/api/?results=3");
+      let data: any = response.data;
+      const newPosts = await InstegramPostModel.find();
+  
+      return res.send(data.results.concat(newPosts));
+    } else {
+      res.status(401).send('Unauthorized for action!');
+    }
   } catch(error) {
     console.log(error);
     // res.render("server-error");
