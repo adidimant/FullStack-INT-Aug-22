@@ -1,4 +1,4 @@
-import express from "express";
+import express ,{Request,Response} from "express";
 import mongoose from "mongoose";
 import multer from "multer";
 import { UserModel } from "./mongoose/userSchema";
@@ -6,6 +6,7 @@ import { InstegramPostModel } from "./mongoose/InstegramPostSchema";
 import { Session } from "./class/Session";
 import connectDB from "./mongoose/connection_mongoDB";
 import { authenticate } from "./guards/sessionAuthenticator";
+import  {rate5Limiter,rate10Limiter,rate1800Limiter,rate20Limiter,rate30Limiter,rate3600Limiter,rate60Limiter} from './guards/RateLimit'
 
 
 require("dotenv").config();
@@ -17,6 +18,7 @@ connectDB();
 
 app.use(cors());
 app.use(express.json());
+app.use(rate5Limiter,rate10Limiter,rate1800Limiter,rate20Limiter,rate30Limiter,rate3600Limiter,rate60Limiter);
 app.set("view engine", "ejs");
 app.use("/images",express.static('Images'));
 
@@ -82,10 +84,13 @@ app.post('/login', async (req:any, res:any) => {
   if (!user) {
     res.status(401).send('Bad username & password combination');
   } else {
-    const session = new Session(username, expirationTime, mongoose); // this class saves the session in mongo behind the scenes - in Session constructor
-    const sessionId = session.getSessionId();
-    res.cookie('sessionId', sessionId, { maxAge: 900000, httpOnly: true });
-    res.status(200).send('Login succesfully!');
+    const session = new Session(username, expirationTime, mongoose);
+     // this class saves the session in mongo behind the scenes - in Session constructor
+      const sessionId = session.getSessionId();
+      res.cookie('sessionId', sessionId, { maxAge: 900000, httpOnly: true });
+      res.status(200).send('Login succesfully!');
+   
+   
   }
 });
 
@@ -112,6 +117,13 @@ app.post("/upload-post", upload.single("image"), async (req, res) => {
     res.status(501);
   }
 });
+
+
+app.get('/Check',(req:Request,res:Response)=>{
+  res.send('good check');
+})
+
+
 
 app.get("/getPosts", async (req, res) => {
   try {
