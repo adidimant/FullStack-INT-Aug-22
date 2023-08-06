@@ -17,7 +17,15 @@ const port = process.env.PORT;
 const expirationTime = Number(process.env.SESSION_EXPIRATION_IN_HOURS) || 12;
 connectDB();
 
-app.use(cors());
+const corsOptions ={
+  origin:'http://localhost:3000', 
+  credentials:true,            //access-control-allow-credentials:true
+  optionSuccessStatus:200
+}
+
+
+
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(rate5Limiter,rate10Limiter,rate20Limiter,rate30Limiter,rate60Limiter,rate1800Limiter,rate3600Limiter);
 app.use(cookieParser());

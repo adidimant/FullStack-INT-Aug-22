@@ -26,7 +26,7 @@ export default function Login() {
 
   const login = async () => {
     debugger;
-    const response = await axiosClient.post('http://localhost:3031/login', { username: email, password });
+    const response = await axiosClient.post('http://localhost:3031/login', { username: email, password },{withCredentials:true});
     debugger;
   };
   
