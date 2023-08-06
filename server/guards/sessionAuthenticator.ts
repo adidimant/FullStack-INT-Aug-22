@@ -11,7 +11,3 @@ export const authenticate = async (sessionId: string, username: string, expirati
   }
   return false;
 }
-
-export async function authenticate2(sessionId: string, username: string, expirationTime: number, mongoose: Mongoose): Promise<boolean> {
-  return true;
-}

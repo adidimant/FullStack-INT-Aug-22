@@ -5,7 +5,7 @@ import { UserModel } from "./mongoose/userSchema";
 import { InstegramPostModel } from "./mongoose/InstegramPostSchema";
 import { Session } from "./class/Session";
 import connectDB from "./mongoose/connection_mongoDB";
-import {authenticate} from "./guards/sessionAuthenticator"
+import { authenticate } from "./guards/sessionAuthenticator";
 
 
 require("dotenv").config();
@@ -90,7 +90,7 @@ app.post('/login', async (req:any, res:any) => {
 });
 
 
-//client-side query example: POST: 'http://localhost:3000//upload-post'; body: { postname, description, userName, data, image}
+//client-side query example: POST: 'http://localhost:3000/upload-post'; body: { postname, description, userName, data, image }
 
 app.post("/upload-post", upload.single("image"), async (req, res) => {
   try {

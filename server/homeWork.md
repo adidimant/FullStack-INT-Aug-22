@@ -57,12 +57,14 @@ show an example of calling Promise.all, Promise.race and Promise.any about those
 
 
 # H.W 02/08:
-- Try to solve the asyncronous bug in the Session class - causing this.sessionId being undefined before initSession finished
-- Implement express middlewear for rate-limiting by IP and by username.
+1) [Bonus for the serious engineers] - try to solve the asynchronous bug in the Session class - causing this.sessionId being undefined before initSession finished - the solution should be that getSessionId method should await some promise to be resolved.
+2) Implement express middlewear for rate-limiting by IP and by username (put the middlewear under the 'guards' folder and import from there)
 it means you should track after requests from the same IPs and the same username over time windows.
-The relevant time windows (left side is seconds right side is request amount): { 5: 5, 10: 8, 20: 12, 30: 15, 60: 20, 1800: 150, 3600: 300 }
+The relevant time windows (left side is seconds right side is request amount):
+{ 5: 5, 10: 8, 20: 12, 30: 15, 60: 20, 1800: 150, 3600: 300 }
+example - if a request from the same IP reached over 5 requests per 5 seconds - block the request by returning the proper 4xx status code (search for it) with a response message ('Too many requests!').
 - If you have any leftovers from the non-working application (react or server or mongo-atlas or git) - fix it!
-- open pull-request with your homework
+- open pull-request to the main branch with your homework
 
 SQL databases are primarily called Relational Databases (RDBMS); whereas NoSQL databases are primarily called non-relational or distributed databases. 
 
