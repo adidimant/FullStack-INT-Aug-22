@@ -1,6 +1,9 @@
+import { stat } from 'fs';
+import { response } from "express";
 import { SessionModel } from "../mongoose/SessionSchema";
 import { Mongoose } from "mongoose";
 import { v4 as uuidv4 } from "uuid";
+
 
 export class Session {
   userName: string| null;
@@ -11,7 +14,7 @@ export class Session {
     userName: string|null,
     expirationTime: number,
     mongoose: Mongoose,
-    sessionId?: string
+    sessionId?: string,
   ) {
     this.userName = userName;
     this.expirationTime = expirationTime;
@@ -22,8 +25,9 @@ export class Session {
   public async getSession() {
     return await SessionModel.findOne({ id: this.sessionId });
   }
+ 
 
-  private async initSession(sessionId?: string): Promise<void> {
+  private async initSession(sessionId?: string): Promise<any> {
     if (!sessionId) {
       const myuuid = uuidv4();
       const session = new SessionModel({
@@ -31,8 +35,10 @@ export class Session {
         userName: this.userName,
         createdDate: Date.now(),
       });
-      await session.save();
-      this.sessionId = myuuid;
+      this.sessionId = myuuid; 
+      await session.save(); 
+      console.log(sessionId);
+    
     } else {
       this.sessionId = sessionId;
     }
@@ -54,8 +60,10 @@ export class Session {
   getuserName() {
     return this.userName;
   }
-  getSessionId() {
-    return this.sessionId;
+ async getSessionId () {
+    await this.initSession(this.sessionId)
+    console.log("session: " +this.sessionId);
+    return this.sessionId; 
   }
   getexpirationTime() {
     return this.expirationTime;

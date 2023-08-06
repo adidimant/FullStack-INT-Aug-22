@@ -6,6 +6,7 @@ import { InstegramPostModel } from "./mongoose/InstegramPostSchema";
 import { Session } from "./class/Session";
 import connectDB from "./mongoose/connection_mongoDB";
 import {authenticate} from "./guards/sessionAuthenticator"
+import {limiter1,limiter2,limiter3,limiter4,limiter5,limiter6,limiter7 } from "./guards/RateLimiter"
 
 
 require("dotenv").config();
@@ -15,10 +16,12 @@ const port = process.env.PORT;
 const expirationTime = Number(process.env.SESSION_EXPIRATION_IN_HOURS) || 12;
 connectDB();
 
+
 app.use(cors());
 app.use(express.json());
 app.set("view engine", "ejs");
 app.use("/images",express.static('Images'));
+app.use(limiter1,limiter2,limiter3,limiter4,limiter5,limiter6,limiter7);
 
 const storage = multer.diskStorage({
   destination: function (req: any, file: Express.Multer.File, callback:(error: Error | null, destination: string) => void) {
@@ -83,7 +86,7 @@ app.post('/login', async (req:any, res:any) => {
     res.status(401).send('Bad username & password combination');
   } else {
     const session = new Session(username, expirationTime, mongoose); // this class saves the session in mongo behind the scenes - in Session constructor
-    const sessionId = session.getSessionId();
+    const sessionId = await session.getSessionId();
     res.cookie('sessionId', sessionId, { maxAge: 900000, httpOnly: true });
     res.status(200).send('Login succesfully!');
   }
