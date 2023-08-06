@@ -5,20 +5,32 @@ import { UserModel } from "./mongoose/userSchema";
 import { InstegramPostModel } from "./mongoose/InstegramPostSchema";
 import { Session } from "./class/Session";
 import connectDB from "./mongoose/connection_mongoDB";
-import {authenticate} from "./guards/sessionAuthenticator"
-
-
+import {authenticate} from "./guards/sessionAuthenticator";
 require("dotenv").config();
+const rateLimit = require('express-rate-limit');
+
+
 const app = express();
 const cors = require("cors");
 const port = process.env.PORT;
 const expirationTime = Number(process.env.SESSION_EXPIRATION_IN_HOURS) || 12;
 connectDB();
 
+//{ 5: 5, 10: 8, 20: 12, 30: 15, 60: 20, 1800: 150, 3600: 300 }
+const limiter = rateLimit({
+  window: 15*60*1000,
+  max:2,
+  message:'Too many requests, please try again later...'
+})
+
+
 app.use(cors());
 app.use(express.json());
 app.set("view engine", "ejs");
 app.use("/images",express.static('Images'));
+
+
+
 
 const storage = multer.diskStorage({
   destination: function (req: any, file: Express.Multer.File, callback:(error: Error | null, destination: string) => void) {
@@ -64,7 +76,7 @@ app.get('/get-user-profile/:username', async (req:any, res:any) => {
 });
 
 
-app.post('/login', async (req:any, res:any) => {
+app.post('/login', limiter,  async (req:any, res:any) => {
   const username = req.body.username;
   const password = req.body.password;
 
@@ -83,7 +95,9 @@ app.post('/login', async (req:any, res:any) => {
     res.status(401).send('Bad username & password combination');
   } else {
     const session = new Session(username, expirationTime, mongoose); // this class saves the session in mongo behind the scenes - in Session constructor
+    console.log(session)
     const sessionId = session.getSessionId();
+    console.log(sessionId)
     res.cookie('sessionId', sessionId, { maxAge: 900000, httpOnly: true });
     res.status(200).send('Login succesfully!');
   }

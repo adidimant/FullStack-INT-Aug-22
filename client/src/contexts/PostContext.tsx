@@ -1,5 +1,5 @@
 import React, { useState, useEffect, createContext } from "react";
-import axios from "axios";
+//import axios from "axios";
 
 type postsType = {};
 export const postsContext = createContext<postsType[]>([]);
