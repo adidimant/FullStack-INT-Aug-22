@@ -15,7 +15,7 @@ export default function App() {
     <AuthProvider>
       <PostsProvider>
         <Routes>
-          <Route path="/getPosts" element={<Posts />} />
+          <Route path="/Posts" element={<Posts />} />
           <Route path="/topPosts" element={<TopPosts />} />
           <Route path="/upload-post" element={<CreatePost />} />
           <Route path="/login" element={<Login />} />

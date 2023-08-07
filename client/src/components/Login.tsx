@@ -11,11 +11,12 @@ import {
   import { FiInstagram } from "react-icons/fi";
 import axiosClient from "../apiClient";
 import { useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-
+  const navigate = useNavigate();
   const getOnChange = (setFunc: (newValue: string) => void) => {
     const handleOnChange = (e: any) => {
       setFunc(e.target.value);
@@ -25,9 +26,16 @@ export default function Login() {
   };
 
   const login = async () => {
-    debugger;
+    // debugger;
     const response = await axiosClient.post('http://localhost:3031/login', { username: email, password },{withCredentials:true});
-    debugger;
+    // debugger;
+    if(response.status === 200){
+      navigate('/Posts');
+    }
+    else{
+      alert('username or password is incorrect');
+    }
+    
   };
   
   return (
