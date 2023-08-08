@@ -76,10 +76,12 @@ app.get('/get-user-profile/:username', async (req:any, res:any) => {
   }
 });
 
-app.get('/GetGraphData',async (req:Request,res:Response)=>{
+app.get('/GetGraphData/:username',async (req:Request,res:Response)=>{
   try {
     const sessionId = req.cookies.sessionId;
-    
+    const username = req.params.username;
+
+    if(await authenticate(sessionId,username,expirationTime,mongoose)){
     const Sessions = await SessionModel.find();
     let NumsOfLogin:any = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
     const currentDate = new Date();
@@ -91,9 +93,13 @@ app.get('/GetGraphData',async (req:Request,res:Response)=>{
         NumsOfLogin[createdDate.getHours()]++;
       }
     })
-    res.status(200).send(NumsOfLogin)
+    res.status(200).send(NumsOfLogin);
+  }
+  else{
+    throw new Error('authenticate failed');
+  }
   } catch (error) {
-    res.status(500).send(error)
+    res.status(500).send(error);
   }
   
   
