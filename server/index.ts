@@ -9,6 +9,7 @@ import { Session } from "./class/Session";
 import connectDB from "./mongoose/connection_mongoDB";
 import { authenticate } from "./guards/sessionAuthenticator";
 import  { rate5Limiter,rate10Limiter,rate1800Limiter,rate20Limiter,rate30Limiter,rate3600Limiter,rate60Limiter } from './guards/RateLimit';
+import { SessionModel } from "./mongoose/SessionSchema";
 
 require("dotenv").config();
 const app = express();
@@ -75,6 +76,28 @@ app.get('/get-user-profile/:username', async (req:any, res:any) => {
   }
 });
 
+app.get('/GetGraphData',async (req:Request,res:Response)=>{
+  try {
+    const sessionId = req.cookies.sessionId;
+    
+    const Sessions = await SessionModel.find();
+    let NumsOfLogin:any = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+    const currentDate = new Date();
+    Sessions.forEach((session)=>{
+      const createdDate = new Date();
+      createdDate.setTime(session?.createdDate as number);
+      
+      if(createdDate.getDay()===currentDate.getDay() && createdDate.getMonth()===currentDate.getMonth() && createdDate.getFullYear() === currentDate.getFullYear() ){
+        NumsOfLogin[createdDate.getHours()]++;
+      }
+    })
+    res.status(200).send(NumsOfLogin)
+  } catch (error) {
+    res.status(500).send(error)
+  }
+  
+  
+})
 
 app.post('/login', async (req:any, res:any) => {
   const username = req.body.username;
