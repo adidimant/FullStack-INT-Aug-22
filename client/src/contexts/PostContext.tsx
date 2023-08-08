@@ -17,7 +17,7 @@ export const PostsProvider = ({ children }: { children: any }) => {
     //   .catch((error) => {
     //     console.log(error);
     //   });
-    let response = await fetch("http://localhost:3031/getPosts");
+    let response = await fetch("http://localhost:3031/getPosts/adi.dimant");
     let result = await response.json();
     setPostData(result);
   }
