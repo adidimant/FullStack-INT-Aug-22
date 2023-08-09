@@ -6,6 +6,7 @@ import CreatePost from "./components/CreatePost";
 import Login from "./components/Login";
 import AuthProvider from './contexts/authProvider';
 import { Navigate } from "react-router-dom";
+import Overview from "./components/Overview";
 
 
 
@@ -20,6 +21,7 @@ export default function App() {
           <Route path="/upload-post" element={<CreatePost />} />
           <Route path="/login" element={<Login />} />
           <Route path="/" element={<Navigate to="/login" />} />
+          <Route path="/overview" element={<Overview />} />
         </Routes>
       </PostsProvider>
       </AuthProvider>

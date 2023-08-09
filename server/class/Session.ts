@@ -38,6 +38,7 @@ export class Session {
         id: myuuid,
         userName: this.userName,
         createdDate: Date.now(),
+        
       });
       await session.save();
     } else {

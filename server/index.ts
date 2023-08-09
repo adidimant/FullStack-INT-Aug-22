@@ -7,14 +7,14 @@ import { UserModel } from "./mongoose/userSchema";
 import { InstegramPostModel } from "./mongoose/InstegramPostSchema";
 import { Session } from "./class/Session";
 import connectDB from "./mongoose/connection_mongoDB";
-import { authenticate } from "./guards/sessionAuthenticator";
+import { authenticate,sessionLogger } from "./guards/sessionAuthenticator";
 import  { rate5Limiter,rate10Limiter,rate1800Limiter,rate20Limiter,rate30Limiter,rate3600Limiter,rate60Limiter } from './guards/RateLimit';
 
 require("dotenv").config();
 const app = express();
 const cors = require("cors");
 const port = process.env.PORT;
-const expirationTime = Number(process.env.SESSION_EXPIRATION_IN_HOURS) || 12;
+const expirationTime = Number(process.env.SESSION_EXPIRATION_IN_HOURS) || 1/60;
 connectDB();
 
 const corsOptions ={
@@ -29,6 +29,7 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(rate5Limiter,rate10Limiter,rate20Limiter,rate30Limiter,rate60Limiter,rate1800Limiter,rate3600Limiter);
 app.use(cookieParser());
+// app.use(sessionLogger);
 app.set("view engine", "ejs");
 app.use("/images",express.static('Images'));
 
@@ -75,17 +76,26 @@ app.get('/get-user-profile/:username', async (req:any, res:any) => {
   }
 });
 
+app.get('/chart', async(req:any, res:any)=>{
+try{
+  res.send(sessionLogger)
+}
+catch(error){
+  console.log("Error", error )
+}})
+
 
 app.post('/login', async (req:any, res:any) => {
   const username = req.body.username;
   const password = req.body.password;
+  
 
   // Uncomment this if this is your first login - for creating your username in the db
-  // const actualUser = new UserModel({
-  //   userName: username,
-  //   password,
-  // });
-  // await actualUser.save();
+  const actualUser = new UserModel({
+    userName: username,
+    password,
+  });
+  await actualUser.save();
 
   const user = await UserModel.findOne({
     userName: username,
@@ -98,6 +108,7 @@ app.post('/login', async (req:any, res:any) => {
     const session = new Session(username, expirationTime, mongoose);
     // this class saves the session in mongo behind the scenes - in Session constructor
     const sessionId = await session.getSessionId();
+    await authenticate(sessionId as string, username, expirationTime, mongoose)
     res.cookie('sessionId', sessionId, { maxAge: expirationTime * 60 * 60000, httpOnly: true });
     res.status(200).send('Login succesfully!');
   }
