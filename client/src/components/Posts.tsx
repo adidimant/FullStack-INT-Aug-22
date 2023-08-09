@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 import { FiInstagram } from "react-icons/fi";
 import { postsContext } from "../contexts/PostContext";
 import { useNavigate } from "react-router-dom";
+import axiosClient from "../apiClient";
 
 export default function Posts() {
   const navigate = useNavigate();
@@ -23,16 +24,18 @@ export default function Posts() {
       //   .catch((error) => {
       //     console.log(error);
       //   });
-      const response = await fetch("http://localhost:3031/getPosts/ori", {
+      const response = await axiosClient.get("http://localhost:3031/getPosts/adi.dimant", {
         method: "GET",
-        credentials: "include",
+        withCredentials: true,
       });
-      const result = await response.json();
+      const result = response?.data;
       const setToContext = postsData[1] as Function
       //adding the posts to the context
-      setToContext(result);
-      //adding the posts to the current state
-      setPosts(result);
+      if (result) {
+        setToContext(result);
+        //adding the posts to the current state
+        setPosts(result);
+      }
     }
   
     getDataFromServer();

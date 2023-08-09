@@ -68,33 +68,30 @@ app.get('/get-user-profile/:username', async (req:any, res:any) => {
   }
 });
 
-app.get('/GetGraphData/:username',async (req:Request,res:Response)=>{
+app.get('/GetGraphData/:username', async (req:Request,res:Response)=>{
   try {
     const sessionId = req.cookies.sessionId;
     const username = req.params.username;
 
-    if(await authenticate(sessionId,username,expirationTime,mongoose)){
-    const Sessions = await SessionModel.find();
-    let NumsOfLogin:any = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
-    const currentDate = new Date();
-    Sessions.forEach((session)=>{
-      const createdDate = new Date();
-      createdDate.setTime(session?.createdDate as number);
-      
-      if(createdDate.getDay()===currentDate.getDay() && createdDate.getMonth()===currentDate.getMonth() && createdDate.getFullYear() === currentDate.getFullYear() ){
-        NumsOfLogin[createdDate.getHours()]++;
-      }
-    })
-    res.status(200).send(NumsOfLogin);
-  }
-  else{
-    throw new Error('authenticate failed');
-  }
+    if (await authenticate(sessionId, username, expirationTime, mongoose)){
+      const sessions = await SessionModel.find();
+      let numsOfLogin :any = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+      const currentDate = new Date();
+      sessions.forEach((session) => {
+        const createdDate = new Date();
+        createdDate.setTime(session?.createdDate as number);
+        
+        if(createdDate.getDay()===currentDate.getDay() && createdDate.getMonth()===currentDate.getMonth() && createdDate.getFullYear() === currentDate.getFullYear() ){
+          numsOfLogin[createdDate.getHours()]++;
+        }
+      });
+      res.status(200).send(numsOfLogin);
+    } else {
+      res.status(401).send('Unauthorized for action!');
+    }
   } catch (error) {
     res.status(500).send(error);
   }
-  
-  
 })
 
 app.post('/login', async (req:any, res:any) => {
