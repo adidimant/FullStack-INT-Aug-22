@@ -66,6 +66,13 @@ example - if a request from the same IP reached over 5 requests per 5 seconds - 
 - If you have any leftovers from the non-working application (react or server or mongo-atlas or git) - fix it!
 - open pull-request to the main branch with your homework
 
+# H.W 06/08:
+1) [Bonus] - Solve the issue that the browser isn't set cookie on the next requests to the backend.
+2) Watch this video about JWT authentication in express.js servers: https://www.youtube.com/watch?v=mbsmsi7l3r4 - fully understand it.
+3) Find a UI library that presents graphs, create a new page called 'Overview' page, that displays 1 graph - logins over time.
+the graph should present only the last 24h, with maximum 25 bars (for example: { 00:00: 20, 01:00: 15, 02:00: 2, .... } )
+The endpoints should be authenticated via our authentication guard.
+
 SQL databases are primarily called Relational Databases (RDBMS); whereas NoSQL databases are primarily called non-relational or distributed databases. 
 
 <!-- sql: -->
