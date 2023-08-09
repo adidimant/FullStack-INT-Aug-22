@@ -73,6 +73,16 @@ example - if a request from the same IP reached over 5 requests per 5 seconds - 
 the graph should present only the last 24h, with maximum 25 bars (for example: { 00:00: 20, 01:00: 15, 02:00: 2, .... } )
 The endpoints should be authenticated via our authentication guard.
 
+# H.W 09/08:
+1) Move `authenticate` function in every data endpoint (route) to an official middleware, use this middleware on every data endpoint we expose
+- Note - the middleware should handle the 401 authorizatin response in case the user isn't authorized! and not from the route
+2) Implement Logout button, that logs the user out, kills (just marking the session as not logged in but not removing it) the user session in the database
+3) Emanuel & Ori - fix the useContext data of the posts in the TopPosts page
+4) Add username to AuthContext, and use it in the call getPosts to backend - to specify generic username (adapt in module Posts.tsx line 27)
+5) Esti - add your recharts graph implementation to our overview page, your graph should be logins per this specific logged-in user, organize the page - smaller graphs, also the graphs should be in the middle.
+6) If you didn't watch - watch this video about JWT authentication in express.js servers: https://www.youtube.com/watch?v=mbsmsi7l3r4.
+Link to recharts graphs for learning: https://recharts.org/en-US/examples/PercentAreaChart
+
 SQL databases are primarily called Relational Databases (RDBMS); whereas NoSQL databases are primarily called non-relational or distributed databases. 
 
 <!-- sql: -->
