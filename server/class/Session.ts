@@ -7,6 +7,8 @@ export class Session {
   sessionId?: string;
   expirationTime: number;
   mongoose: Mongoose;
+  private initPromise: Promise<boolean> | undefined;
+  private setInitPromise: ((successFlag: boolean) => void) | undefined;
   constructor(
     userName: string|null,
     expirationTime: number,
@@ -16,28 +18,39 @@ export class Session {
     this.userName = userName;
     this.expirationTime = expirationTime;
     this.mongoose = mongoose;
+
+    this.initPromise = new Promise((res, rej) => {
+      this.setInitPromise = res;
+    });
+
     this.initSession(sessionId);
   }
+
 
   public async getSession() {
     return await SessionModel.findOne({ id: this.sessionId });
   }
 
+
   private async initSession(sessionId?: string): Promise<void> {
     if (!sessionId) {
       const myuuid = uuidv4();
+      console.log(myuuid)
+      this.sessionId = myuuid; //the fix that was needed is to set the Session id before the creation in mongo
       const session = new SessionModel({
         id: myuuid,
         userName: this.userName,
-        createdDate: Date.now(),
+        createdDate: new Date().getHours(),
       });
       await session.save();
-      this.sessionId = myuuid;
     } else {
       this.sessionId = sessionId;
     }
-  }
 
+    if (this.setInitPromise) {
+      this.setInitPromise(true);
+    }
+  }
   public isValid(session: any): boolean {
     const currentTime = Date.now();
     const liveSession = currentTime - session.createdDate;
@@ -50,23 +63,26 @@ export class Session {
       return false;
     }
   }
-
-  getuserName() {
+  getUserName() {
     return this.userName;
   }
-  getSessionId() {
-    return this.sessionId;
+  async getSessionId() {
+    if (await this.initPromise) {
+      return this.sessionId;
+    }
+    return null;
   }
-  getexpirationTime() {
+
+  getExpirationTime() {
     return this.expirationTime;
   }
-  setuserName(userName: string) {
-    this.userName=userName;
+  setUserName(userName: string) {
+    this.userName = userName;
   }
-  setsessionId(sessionId: string) {
+  setSessionId(sessionId: string) {
     this.sessionId = sessionId;
   }
-  setexpirationTime(expirationTime: number) {
+  setExpirationTime(expirationTime: number) {
      this.expirationTime = expirationTime;
   }
 }

@@ -6,7 +6,10 @@ import { InstegramPostModel } from "./mongoose/InstegramPostSchema";
 import { Session } from "./class/Session";
 import connectDB from "./mongoose/connection_mongoDB";
 import {authenticate} from "./guards/sessionAuthenticator"
-
+import  { rate5Limiter,rate10Limiter,rate1800Limiter,rate20Limiter,rate30Limiter,rate3600Limiter,rate60Limiter } from './guards/RateLimit';
+import {checkUserCookies} from './middleWare/checkUserCookies'
+import axios from "axios";
+import { SessionModel } from "./mongoose/SessionSchema";
 require("dotenv").config();
 const app = express();
 const cors = require("cors");
@@ -14,10 +17,19 @@ const port = process.env.PORT;
 const expirationTime = Number(process.env.SESSION_EXPIRATION_IN_HOURS) || 12;
 connectDB();
 
-app.use(cors());
+app.use(cors({
+  origin: true, 
+  credentials:true,
+}));
+
 app.use(express.json());
+app.use(rate5Limiter,rate10Limiter,rate20Limiter,rate30Limiter,rate60Limiter,rate1800Limiter,rate3600Limiter);
+// app.use(cookieParser());
 app.set("view engine", "ejs");
 app.use("/images",express.static('Images'));
+
+
+
 
 const storage = multer.diskStorage({
   destination: function (req: any, file: Express.Multer.File, callback:(error: Error | null, destination: string) => void) {
@@ -62,10 +74,29 @@ app.get('/get-user-profile/:username', async (req:any, res:any) => {
   }
 });
 
+app.get('/overview', async(req:any, res:any)=>{
+  
+const sessionUsers = await SessionModel.find()
+
+  const sessionTime = sessionUsers.map((sessionUser)=>{
+    return sessionUser.createdDate
+  });
+  res.status(200).send(sessionTime);
+
+})
 
 app.post('/login', async (req:any, res:any) => {
   const username = req.body.username;
   const password = req.body.password;
+
+    // Uncomment this if this is your first login - for creating your username in the db
+  // const actualUser = new UserModel({
+  //   userName: username,
+  //   password,
+  // });
+
+  // await actualUser.save(); 
+
   const user = await UserModel.findOne({
     userName: username,
     password,
@@ -74,9 +105,13 @@ app.post('/login', async (req:any, res:any) => {
   if (!user) {
     res.status(401).send('Bad username & password combination');
   } else {
-    const session = new Session(username, expirationTime, mongoose); // this class saves the session in mongo behind the scenes - in Session constructor
-    const sessionId = session.getSessionId();
-    res.cookie('sessionId', sessionId, { maxAge: 900000, httpOnly: true });
+
+ 
+
+    const session = new Session(username, expirationTime, mongoose);
+    // this class saves the session in mongo behind the scenes - in Session constructor
+    const sessionId = await session.getSessionId();
+    res.cookie('sessionId', sessionId, { maxAge: expirationTime * 60 * 60000, httpOnly: true });
     res.status(200).send('Login succesfully!');
   }
 });
