@@ -30,7 +30,7 @@ const AuthHelper = function ({ children, authState, setAuthState }: { children: 
     const interceptor = apiClient.interceptors.response.use(
       (res) => res,
       (error: Error & { response: AxiosResponse }) => {
-        if (authState.isLoggedIn && error?.response?.status === 401) {
+        if (error?.response?.status === 401) {
           logout();
         }
 
