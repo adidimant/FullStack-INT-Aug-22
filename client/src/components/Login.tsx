@@ -1,16 +1,13 @@
 import {
     Container,
-    FormGroup,
     Input,
     Button,
     Form,
-    InputGroup,
-    InputGroupText,
   } from "reactstrap";
   import { BsPersonCircle } from "react-icons/bs";
   import { FiInstagram } from "react-icons/fi";
 import axiosClient from "../apiClient";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 export default function Login() {
@@ -25,6 +22,7 @@ export default function Login() {
     return handleOnChange;
   };
 
+
   const login = async () => {
     // debugger;
     const response = await axiosClient.post('http://localhost:3031/login', { username: email, password },{withCredentials:true});
@@ -35,7 +33,6 @@ export default function Login() {
     else{
       alert('username or password is incorrect');
     }
-    
   };
   
   return (

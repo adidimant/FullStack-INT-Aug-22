@@ -18,15 +18,7 @@ const port = process.env.PORT;
 const expirationTime = Number(process.env.SESSION_EXPIRATION_IN_HOURS) || 12;
 connectDB();
 
-const corsOptions ={
-  origin:'http://localhost:3000', 
-  credentials:true,            //access-control-allow-credentials:true
-  optionSuccessStatus:200
-}
-
-
-
-app.use(cors(corsOptions));
+app.use(cors({ credentials: true, origin: true, maxAge: 2592000, optionSuccessStatus:200 }));
 app.use(express.json());
 app.use(rate5Limiter,rate10Limiter,rate20Limiter,rate30Limiter,rate60Limiter,rate1800Limiter,rate3600Limiter);
 app.use(cookieParser());
@@ -127,7 +119,7 @@ app.post('/login', async (req:any, res:any) => {
     const session = new Session(username, expirationTime, mongoose);
     // this class saves the session in mongo behind the scenes - in Session constructor
     const sessionId = await session.getSessionId();
-    res.cookie('sessionId', sessionId, { maxAge: expirationTime * 60 * 60000, httpOnly: true });
+    res.cookie('sessionId', sessionId, { maxAge: expirationTime * 60 * 60000, httpOnly: true, sameSite: 'none', secure: true });
     res.status(200).send('Login succesfully!');
   }
 });
