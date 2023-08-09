@@ -75,8 +75,8 @@ The endpoints should be authenticated via our authentication guard.
 
 # H.W 09/08:
 1) Move `authenticate` function in every data endpoint (route) to an official middleware, use this middleware on every data endpoint we expose
-- Note - the middleware should handle the 401 authorizatin response in case the user isn't authorized! and not from the route
-2) Implement Logout button, that logs the user out, kills (just marking the session as not logged in but not removing it) the user session in the database
+- Note - the middleware should handle the 401 authorization response in case the user isn't authorized! and not from the route
+2) Implement Logout button (should be displayed in every page in a top layout component above all pages), pressing the button logs the user out, ends the user session in the database (just marking the session as not logged in but not removing it)
 3) Emanuel & Ori - fix the useContext data of the posts in the TopPosts page
 4) Add username to AuthContext, and use it in the call getPosts to backend - to specify generic username (adapt in module Posts.tsx line 27)
 5) Esti - add your recharts graph implementation to our overview page, your graph should be logins per this specific logged-in user, organize the page - smaller graphs, also the graphs should be in the middle.
