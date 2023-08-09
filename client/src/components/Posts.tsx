@@ -39,7 +39,7 @@ export default function Posts() {
     }
   
     getDataFromServer();
-  }, [])
+  }, [postsData]);
   return (
     <>
     

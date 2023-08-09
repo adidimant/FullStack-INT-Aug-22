@@ -92,7 +92,7 @@ app.get('/GetGraphData/:username', async (req:Request,res:Response)=>{
   } catch (error) {
     res.status(500).send(error);
   }
-})
+});
 
 app.post('/login', async (req:any, res:any) => {
   const username = req.body.username;
