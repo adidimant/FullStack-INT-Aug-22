@@ -1,4 +1,4 @@
-import { useState, createContext, useEffect, useCallback } from "react";
+import { useState, createContext, useLayoutEffect, useCallback, useContext, Dispatch } from "react";
 import { AxiosResponse } from 'axios';
 import apiClient from '../apiClient';
 import { useNavigate } from "react-router-dom";
@@ -7,13 +7,13 @@ type AuthContextType = {
   isLoggedIn: boolean;
 };
 
-export const AuthContext = createContext<AuthContextType>({ isLoggedIn: false });
+export const AuthContext = createContext<{ state: AuthContextType; dispatch: Dispatch<AuthContextType> }>({ state: { isLoggedIn: false }, dispatch: () => undefined });
 
 const getDefaultAuthState = () => {
   return {
     isLoggedIn: false,
   };
-}
+};
 
 const AuthHelper = function ({ children, authState, setAuthState }: { children: any, authState: AuthContextType, setAuthState: (newState: AuthContextType) => void }) {
   const navigate = useNavigate();
@@ -26,16 +26,16 @@ const AuthHelper = function ({ children, authState, setAuthState }: { children: 
     navigate('/login');
   }, [authState]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const interceptor = apiClient.interceptors.response.use(
       (res) => res,
       (error: Error & { response: AxiosResponse }) => {
-        if (authState.isLoggedIn && error?.response?.status === 401) {
+        if (error?.response?.status === 401) {
           logout();
         }
 
-        throw error;
-      },
+        alert(`Error from server, status: ${error?.response?.status}`);
+      }
     );
 
     return () => apiClient.interceptors.response.eject(interceptor);
@@ -48,7 +48,7 @@ const AuthProvider = ({ children }: { children: any }) => {
   const [authState, setAuthState] = useState(getDefaultAuthState());
 
   return (
-    <AuthContext.Provider value={authState}>
+    <AuthContext.Provider value={{ state: authState, dispatch: setAuthState }}>
       <AuthHelper authState={authState} setAuthState={setAuthState} >
         {children}
       </AuthHelper>
@@ -56,4 +56,20 @@ const AuthProvider = ({ children }: { children: any }) => {
   );
 };
 
+const useAuthContext = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuthContext must be used within App');
+  }
+  const { state, dispatch } = context;
+
+  return {
+    ...state,
+    dispatch: (renewObject: Partial<AuthContextType>) => {
+      dispatch({ ...state, ...renewObject });
+    },
+  };
+}
+
+export { useAuthContext };
 export default AuthProvider;

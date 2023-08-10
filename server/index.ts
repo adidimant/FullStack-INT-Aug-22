@@ -10,6 +10,7 @@ import connectDB from "./mongoose/connection_mongoDB";
 import {authenticate} from "./guards/sessionAuthenticator";
 
 import  { rate5Limiter,rate10Limiter,rate1800Limiter,rate20Limiter,rate30Limiter,rate3600Limiter,rate60Limiter } from './guards/RateLimit';
+import { SessionModel } from "./mongoose/SessionSchema";
 
 require("dotenv").config();
 const rateLimit = require('express-rate-limit');
@@ -21,16 +22,10 @@ const port = process.env.PORT;
 const expirationTime = Number(process.env.SESSION_EXPIRATION_IN_HOURS) || 12;
 connectDB();
 
-//{ 5: 5, 10: 8, 20: 12, 30: 15, 60: 20, 1800: 150, 3600: 300 }
-const limiter = rateLimit({
-  window: 15*60*1000,
-  max:2,
-  message:'Too many requests, please try again later...'
-})
 
+// app.use(cors());
+app.use(cors({ credentials: true, origin: true, maxAge: 2592000, optionSuccessStatus:200 }));
 
-app.use(cors());
-app.use(express.json());
 app.use(rate5Limiter,rate10Limiter,rate20Limiter,rate30Limiter,rate60Limiter,rate1800Limiter,rate3600Limiter);
 // app.use(cookieParser());
 app.set("view engine", "ejs");
@@ -82,8 +77,33 @@ app.get('/get-user-profile/:username', async (req:any, res:any) => {
   }
 });
 
+app.get('/GetGraphData/:username', async (req:Request,res:Response)=>{
+  try {
+    const sessionId = req.cookies.sessionId;
+    const username = req.params.username;
 
-app.post('/login', limiter,  async (req:any, res:any) => {
+    if (await authenticate(sessionId, username, expirationTime, mongoose)){
+      const sessions = await SessionModel.find();
+      let numsOfLogin :any = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+      const currentDate = new Date();
+      sessions.forEach((session) => {
+        const createdDate = new Date();
+        createdDate.setTime(session?.createdDate as number);
+        
+        if(createdDate.getDay()===currentDate.getDay() && createdDate.getMonth()===currentDate.getMonth() && createdDate.getFullYear() === currentDate.getFullYear() ){
+          numsOfLogin[createdDate.getHours()]++;
+        }
+      });
+      res.status(200).send(numsOfLogin);
+    } else {
+      res.status(401).send('Unauthorized for action!');
+    }
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
+app.post('/login',  async (req:any, res:any) => {
   const username = req.body.username;
   const password = req.body.password;
 
@@ -108,7 +128,7 @@ app.post('/login', limiter,  async (req:any, res:any) => {
     const session = new Session(username, expirationTime, mongoose);
     // this class saves the session in mongo behind the scenes - in Session constructor
     const sessionId = await session.getSessionId();
-    res.cookie('sessionId', sessionId, { maxAge: expirationTime * 60 * 60000, httpOnly: true });
+    res.cookie('sessionId', sessionId, { maxAge: expirationTime * 60 * 60000, httpOnly: true, sameSite: 'none', secure: true });
     res.status(200).send('Login succesfully!');
   }
 });

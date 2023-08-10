@@ -26,29 +26,31 @@ export class Session {
     this.initSession(sessionId);
   }
 
-  private  initSession(sessionId?: string): Promise<void> {
-    return new Promise((res, rej)=>{
-      if (!sessionId) {
-        const myuuid = uuidv4();
-        const session = new SessionModel({
-          id: myuuid,
-          userName: this.userName,
-          createdDate: Date.now(),
-        });
-        session.save();
-        return this.sessionId = myuuid;
-        res()
-      } else {
-        this.sessionId = sessionId;
-       rej()
-      }
-    })
-    
-  }
   
   public async getSession() {
     return await SessionModel.findOne({ id: this.sessionId });
   }
+
+
+  private async initSession(sessionId?: string): Promise<void> {
+    if (!sessionId) {
+      const myuuid = uuidv4();
+      this.sessionId = myuuid; //the fix that was needed is to set the Session id before the creation in mongo
+      const session = new SessionModel({
+        id: myuuid,
+        userName: this.userName,
+        createdDate: Date.now(),
+      });
+      await session.save({ timestamps: { createdAt: true, updatedAt: false } }); //add time when creating the Session
+    } else {
+      this.sessionId = sessionId;
+    }
+
+    if (this.setInitPromise) {
+      this.setInitPromise(true);
+    }
+  }
+
 
   public isValid(session: any): boolean {
     const currentTime = Date.now();
