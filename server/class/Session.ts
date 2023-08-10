@@ -35,7 +35,6 @@ export class Session {
   private async initSession(sessionId?: string): Promise<void> {
     if (!sessionId) {
       const myuuid = uuidv4();
-      console.log(myuuid)
       this.sessionId = myuuid; //the fix that was needed is to set the Session id before the creation in mongo
       const session = new SessionModel({
         id: myuuid,
@@ -63,6 +62,7 @@ export class Session {
       return false;
     }
   }
+
   getUserName() {
     return this.userName;
   }
