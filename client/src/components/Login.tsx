@@ -28,9 +28,7 @@ export default function Login() {
 
 
   const login = async () => {
-    // debugger;
     const response = await axiosClient.post('http://localhost:3031/login', { username: email, password },{ withCredentials:true });
-    // debugger;
     if(response?.status === 200) {
       dispatchAuthContext({ isLoggedIn: true });
       navigate('/Posts');
