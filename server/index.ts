@@ -1,15 +1,24 @@
-import express ,{Request,Response} from "express";
+import express, { Request, Response } from "express";
 import mongoose from "mongoose";
 import multer from "multer";
-import axios from 'axios';
+import axios from "axios";
 import cookieParser from "cookie-parser";
 import { UserModel } from "./mongoose/userSchema";
 import { InstegramPostModel } from "./mongoose/InstegramPostSchema";
 import { Session } from "./class/Session";
 import connectDB from "./mongoose/connection_mongoDB";
 import { authenticate } from "./guards/sessionAuthenticator";
-import  { rate5Limiter,rate10Limiter,rate1800Limiter,rate20Limiter,rate30Limiter,rate3600Limiter,rate60Limiter } from './guards/RateLimit';
+import {
+  rate5Limiter,
+  rate10Limiter,
+  rate1800Limiter,
+  rate20Limiter,
+  rate30Limiter,
+  rate3600Limiter,
+  rate60Limiter,
+} from "./guards/RateLimit";
 import { SessionModel } from "./mongoose/SessionSchema";
+import { authMiddleware } from "./guards/authenticateMiddleware";
 
 require("dotenv").config();
 const app = express();
@@ -18,86 +27,88 @@ const port = process.env.PORT;
 const expirationTime = Number(process.env.SESSION_EXPIRATION_IN_HOURS) || 12;
 connectDB();
 
-app.use(cors({ credentials: true, origin: true, maxAge: 2592000, optionSuccessStatus:200 }));
+app.use(
+  cors({
+    credentials: true,
+    origin: true,
+    maxAge: 2592000,
+    optionSuccessStatus: 200,
+  })
+);
 app.use(express.json());
-app.use(rate5Limiter,rate10Limiter,rate20Limiter,rate30Limiter,rate60Limiter,rate1800Limiter,rate3600Limiter);
+app.use(
+  rate5Limiter,
+  rate10Limiter,
+  rate20Limiter,
+  rate30Limiter,
+  rate60Limiter,
+  rate1800Limiter,
+  rate3600Limiter
+);
 app.use(cookieParser());
 app.set("view engine", "ejs");
-app.use("/images",express.static('Images'));
+app.use("/images", express.static("Images"));
 
 const storage = multer.diskStorage({
-  destination: function (req: any, file: Express.Multer.File, callback:(error: Error | null, destination: string) => void) {
+  destination: function (
+    req: any,
+    file: Express.Multer.File,
+    callback: (error: Error | null, destination: string) => void
+  ) {
     callback(null, "./Images");
   },
-  filename: function (req: any, file: Express.Multer.File, callback:(error: Error | null, destination: string) => void) {
+  filename: function (
+    req: any,
+    file: Express.Multer.File,
+    callback: (error: Error | null, destination: string) => void
+  ) {
     console.log(file);
     callback(null, `${file.originalname}_${Date.now()}`);
   },
 });
 const upload = multer({ storage });
 
+// app.use('/update-user/:username',authMiddleware) also a way to use this middleware and we decided to do it for each route
+
 // client-side query example: POST: 'http://localhost:3000/update-user/3069588493'; body: { address: 'Bugrashov 7, Tel-Aviv, Israel'}
-app.post('/update-user/:username', async (req:any, res:any) => {
-  const username = req.params.username;
-  const { address, email } = req.body;
-  const sessionId = req.cookies?.sessionId;
-
-  if (await authenticate(sessionId, username, expirationTime, mongoose)) {
-    // save new user data in database - by username
-    await UserModel.updateOne({
-      userName: username,
-    }, { address, email });
-    res.status(200).send('User updated successfully!');
-  } else {
-    res.status(401).send('Unauthorized for action!');
-  }
-});
-
-
-app.get('/get-user-profile/:username', async (req:any, res:any) => {
-  const username = req.params.username;
-  const sessionId = req.cookies?.sessionId;
-
-  if (await authenticate(sessionId, username, expirationTime, mongoose)) {
-    const user = await UserModel.findOne({
-      userName: username,
-    });
-    res.json(user);
-  } else {
-    res.status(401).send('Unauthorized for action!');
-  }
-});
-
-app.get('/GetGraphData/:username',async (req:Request,res:Response)=>{
-  try {
-    const sessionId = req.cookies.sessionId;
+app.post(
+  "/update-user/:username",
+  authMiddleware,
+  async (req: any, res: any) => {
     const username = req.params.username;
+    const { address, email } = req.body;
 
-    if(await authenticate(sessionId,username,expirationTime,mongoose)){
-    const Sessions = await SessionModel.find();
-    let NumsOfLogin:any = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
-    const currentDate = new Date();
-    Sessions.forEach((session)=>{
-      const createdDate = new Date();
-      createdDate.setTime(session?.createdDate as number);
-      
-      if(createdDate.getDay()===currentDate.getDay() && createdDate.getMonth()===currentDate.getMonth() && createdDate.getFullYear() === currentDate.getFullYear() ){
-        NumsOfLogin[createdDate.getHours()]++;
+    // save new user data in database - by username
+    await UserModel.updateOne(
+      {
+        userName: username,
+      },
+      { address, email }
+    );
+    res.status(200).send("User updated successfully!");
+  }
+);
+
+app.get(
+  "/get-user-profile/:username",
+  authMiddleware,
+  async (req: Request, res: Response) => {
+    const username = req.params.username;
+    try {
+      const user = await UserModel.findOne({
+        userName: username,
+      });
+      if (!user) {
+        res.status(400).send("Bad Request");
       }
-    })
-    res.status(200).send(NumsOfLogin);
+      res.json(user);
+    } catch (error) {
+      res.status(400).send("Bad Request");
+    }
   }
-  else{
-    throw new Error('authenticate failed');
-  }
-  } catch (error) {
-    res.status(500).send(error);
-  }
-  
-  
-});
+);
 
-app.post('/login', async (req:any, res:any) => {
+app.post("/login", async (req: any, res: any) => {
   const username = req.body.username;
   const password = req.body.password;
 
@@ -114,59 +125,91 @@ app.post('/login', async (req:any, res:any) => {
   });
 
   if (!user) {
-    res.status(401).send('Bad username & password combination');
+    res.status(401).send("Bad username & password combination");
   } else {
     const session = new Session(username, expirationTime, mongoose);
     // this class saves the session in mongo behind the scenes - in Session constructor
     const sessionId = await session.getSessionId();
-    res.cookie('sessionId', sessionId, { maxAge: expirationTime * 60 * 60000, httpOnly: true, sameSite: 'none', secure: true });
-    res.status(200).send('Login succesfully!');
+    res.cookie("sessionId", sessionId, {
+      maxAge: expirationTime * 60 * 60000,
+      httpOnly: true,
+      sameSite: "none",
+      secure: true,
+    });
+    res.status(200).send("Login succesfully!");
   }
 });
 
+app.get(
+  "/GetGraphData/:username",
+  authMiddleware,
+  async (req: Request, res: Response) => {
+    try {
+      const Sessions = await SessionModel.find();
+      let NumsOfLogin: any = [
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      ];
+      const currentDate = new Date();
+      Sessions.forEach((session) => {
+        const createdDate = new Date();
+        createdDate.setTime(session?.createdDate as number);
+
+        if (
+          createdDate.getDay() === currentDate.getDay() &&
+          createdDate.getMonth() === currentDate.getMonth() &&
+          createdDate.getFullYear() === currentDate.getFullYear()
+        ) {
+          NumsOfLogin[createdDate.getHours()]++;
+        }
+      });
+      res.status(200).send(NumsOfLogin);
+    } catch (error) {
+      res.status(500).send(error);
+    }
+  }
+);
 
 //client-side query example: POST: 'http://localhost:3000/upload-post'; body: { postname, description, userName, data, image }
 
-app.post("/upload-post", upload.single("image"), async (req, res) => {
-  try {
-    const image = req.file;
-    const { postName, description, userName, date } = req.body;
-    console.log(image?.filename, postName, description, userName, date);
+app.post(
+  "/upload-post/:username",
+  upload.single("image"),
+  authMiddleware,
+  async (req, res) => {
+    try {
+      const image = req.file;
+      const { username } = req.params;
+      const { postName, description, date } = req.body;
+      console.log(image?.filename, postName, description, username, date);
 
-    const newPost = new InstegramPostModel({
-      postName: postName,
-      description: description,
-      userName: userName,
-      date: date,
-      image: image?.filename,
-    });
-    await newPost.save();
-    console.log(newPost);
-    res.status(201);
-  } catch {
-    res.status(501);
+      const newPost = new InstegramPostModel({
+        postName: postName,
+        description: description,
+        userName: username,
+        date: date,
+        image: image?.filename,
+      });
+      await newPost.save();
+      console.log(newPost);
+      res.status(201).send('post added');
+    } catch {
+      res.status(501).send('post couldnt be added');
+    }
   }
+);
+
+app.get("/Check", (req: Request, res: Response) => {
+  res.send("good check");
 });
 
-
-app.get('/Check',(req:Request,res:Response)=>{
-  res.send('good check');
-})
-
-app.get("/getPosts/:username", async (req, res) => {
-  const username = req.params.username;
-  const sessionId = req.cookies?.sessionId;
+app.get("/getPosts/:username", authMiddleware, async (req, res) => {
   try {
-    if (await authenticate(sessionId, username, expirationTime, mongoose)) {
-      let response = await axios.get("https://randomuser.me/api/?results=3");
-      let data: any = response.data;
-      const newPosts = await InstegramPostModel.find();
-  
-      return res.send(data.results.concat(newPosts));
-    } else {
-      res.status(401).send('Unauthorized for action!');
-    }
-  } catch(error) {
+    let response = await axios.get("https://randomuser.me/api/?results=3");
+    let data: any = response.data;
+    const newPosts = await InstegramPostModel.find();
+
+    return res.send(data.results.concat(newPosts));
+  } catch (error) {
     console.log(error);
     // res.render("server-error");
   }

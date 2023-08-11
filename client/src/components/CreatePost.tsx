@@ -1,17 +1,13 @@
 import React, { useContext, useRef, useEffect, useState } from "react";
-import {
-  Input,
-  Button,
-  Form,
-  Container,
-} from "reactstrap";
+import { Input, Button, Form, Container } from "reactstrap";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { useAuthContext } from "../contexts/authProvider";
 
 export default function CreatePost() {
-  const [image,setImage] = useState("");
+  const [image, setImage] = useState("");
   const navigate = useNavigate();
-
+  const Auth = useAuthContext()
   // const formElenemt = useRef() as any;
 
   function uploadImage(event: any) {
@@ -28,25 +24,16 @@ export default function CreatePost() {
     data.append("description", event.target.description.value);
     data.append("userName", event.target.userName.value);
     data.append("date", event.target.date.value);
- 
-    axios
-      .post("http://localhost:3031/upload-post", data)
-      .then((res) => console.log("Request complete! response:", res));
-       navigate("/getPosts");
-    // await fetch("http://localhost:3031/upload-post", {
-    //   method: "POST",
-    //   body: data,
-    // }).then((res) => {
-    //   console.log("Request complete! response:", res);
-    // });
+
+    const res = await axios.post(
+      `http://localhost:3031/upload-post/${Auth.userName}`,
+      data,
+      { withCredentials: true }
+    );
+    console.log("Request complete! response:", res);
+    navigate("/Posts");
   }
 
-  // useEffect(()=>{
-  //   formElenemt.current?.addEventListener("submit", createNewPost);
-  //   return()=>{
-  //     formElenemt.current?.removeEventListener('submit', createNewPost)
-  //   }
-  // },[])
 
   return (
     <>
@@ -69,7 +56,7 @@ export default function CreatePost() {
           <Input id="date" type="date" placeholder="date" />
           <Button type="submit">Add New Post</Button>
         </Form>
-      </Container> 
+      </Container>
     </>
   );
 }

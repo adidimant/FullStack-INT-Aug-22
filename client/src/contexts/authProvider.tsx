@@ -5,16 +5,18 @@ import { useNavigate } from "react-router-dom";
 
 type AuthContextType = {
   isLoggedIn: boolean;
+  userName:string;
 };
 
-export const AuthContext = createContext<{ state: AuthContextType; dispatch: Dispatch<AuthContextType> }>({ state: { isLoggedIn: false }, dispatch: () => undefined });
+export const AuthContext = createContext<{ state: AuthContextType; dispatch: Dispatch<AuthContextType> }>({ state: { isLoggedIn: false,userName:'' }, dispatch: () => undefined });
 
 const getDefaultAuthState = () => {
   return {
     isLoggedIn: false,
-  };
+    userName:''
+  }; 
 };
-
+ export let TempLogout : ()=>void;
 const AuthHelper = function ({ children, authState, setAuthState }: { children: any, authState: AuthContextType, setAuthState: (newState: AuthContextType) => void }) {
   const navigate = useNavigate();
 
@@ -22,10 +24,13 @@ const AuthHelper = function ({ children, authState, setAuthState }: { children: 
     setAuthState({
       ...authState,
       isLoggedIn: false,
+      userName:''
     });
     navigate('/login');
   }, [authState]);
 
+  TempLogout=logout;
+ 
   useLayoutEffect(() => {
     const interceptor = apiClient.interceptors.response.use(
       (res) => res,
@@ -70,6 +75,5 @@ const useAuthContext = () => {
     },
   };
 }
-
 export { useAuthContext };
 export default AuthProvider;

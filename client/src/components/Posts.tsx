@@ -1,57 +1,49 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useLayoutEffect, useState } from "react";
 import { Button, CardGroup, Container, Row } from "reactstrap";
 import Post from "./Post";
 import { v4 as uuidv4 } from "uuid";
 import { FiInstagram } from "react-icons/fi";
 import { postsContext } from "../contexts/PostContext";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axiosClient from "../apiClient";
+import { postModel } from "../models/postModel";
+import { TempLogout, useAuthContext } from "../contexts/authProvider";
+
+
+
 
 export default function Posts() {
   const navigate = useNavigate();
-  const postsData = useContext(postsContext);
-  const [Posts,setPosts] = useState([])
+  const [postsData, setPostdata] = useContext(postsContext);
+  const [Posts, setPosts] = useState([]);
   console.log(postsData);
 
   useEffect(() => {
-    async function getDataFromServer() {
-      // axios
-      //   .get("http://localhostn:3031/getPosts")
-      //   .then((res) => {
-      //     console.log(res)
-      //    setPostData(res.data)
-      //   })
-      //   .catch((error) => {
-      //     console.log(error);
-      //   });
-      const response = await axiosClient.get("http://localhost:3031/getPosts/adi.dimant", {
-        method: "GET",
-        withCredentials: true,
-      });
-      const result = response?.data;
-      const setToContext = postsData[1] as Function
-      //adding the posts to the context
-      if (result) {
-        setToContext(result);
-        //adding the posts to the current state
-        setPosts(result);
-      }
-    }
-  
-    getDataFromServer();
+    setPosts(postsData);
+    console.log(postsData);
   }, [postsData]);
+
   return (
     <>
-    
+    <Button onClick={TempLogout}>
+      LogOut
+    </Button>
       <div style={{ display: "flex", alignItems: "center" }}>
         <h5>Instegram </h5>
         <FiInstagram
           style={{ color: "black", fontSize: "20px", margin: "5px" }}
         />
       </div>
-      <Button onClick={()=>{navigate("/upload-post")}}>
+      <Button
+        onClick={() => {
+          navigate("/upload-post");
+        }}
+      >
         Add post
       </Button>
+      <Link to={'/topPosts'}>
+        to Top Posts
+      </Link>
       <Container
         style={{
           display: "flex",
@@ -61,14 +53,13 @@ export default function Posts() {
         }}
       >
         <CardGroup>
-          <Row>
-            {Posts.map((post) => {
+          <div style={{ display: "flex", flexWrap: "wrap" }}>
+            {Posts?.map((post: postModel) => {
               return <Post key={uuidv4()} post={post} />;
             })}
-          </Row>
+          </div>
         </CardGroup>
       </Container>
-
     </>
   );
 }

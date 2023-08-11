@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from 'react'
 import Bargraph from './Bargraph';
 import axios from 'axios';
-
+import { useAuthContext } from '../contexts/authProvider';
 
 function Overview() {
   const [statisticData, setStatisticData] = useState([]);
-
+  const Auth = useAuthContext();
   useEffect(() => {
     async function GetGraphData(){
         try {
-            const { data } :any = await axios.get('http://localhost:3031/GetGraphData/adi.dimant',{ withCredentials:true });
+            const { data } :any = await axios.get(`http://localhost:3031/GetGraphData/${Auth.userName}`,{ withCredentials:true });
             console.log(data);
             setStatisticData(data);
         } catch (error) {

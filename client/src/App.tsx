@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Link } from "react-router-dom";
 import { PostsProvider } from "./contexts/PostContext";
 import Posts from "./components/Posts";
 import TopPosts from "./components/TopPosts";

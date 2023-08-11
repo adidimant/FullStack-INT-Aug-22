@@ -1,32 +1,47 @@
-import React from 'react'
-import { postModel } from '../models/postModel'
-import { Card, CardBody, CardText, CardTitle, Col } from 'reactstrap'
+import React from "react";
+import { postModel } from "../models/postModel";
+import { Card, CardBody, CardText, CardTitle, Col } from "reactstrap";
 
-export default function TopPost({post}:{post:postModel}) {
-    console.log(post)
+export default function TopPost({ post }: { post: any }) {
   return (
-<>
-<Col  sm={4}>
+    <>
+      <Col sm={4}>
         <Card
           color="light"
           style={{
             width: "18rem",
-            border:'none',
-            textAlign:'center',
-            marginBottom:'20px'
+            border: "none",
+            textAlign: "center",
+            marginBottom: "20px",
           }}
         >
-          <img alt="Sample" src={post.img} />
+          <img
+            src={
+              post.image
+                ? `http://localhost:3031/images/${post.image}`
+                : post.picture.large
+            }
+            alt=""
+          />
           <CardBody>
-            <CardTitle style={{fontSize:'12px', fontWeight:'bold'}}>{post.firstName}</CardTitle>
-            <CardText style={{fontSize:'10px'}}> {post.lastName}</CardText>
-            <CardText style={{fontSize:'10px'}}>  {post.country}</CardText>
-            <CardText style={{fontSize:'10px'}}>{post.date}</CardText>
+            <CardTitle style={{ fontSize: "12px", fontWeight: "bold" }}>
+              {" "}
+              {post.userName || post.name.first}
+            </CardTitle>
+            <CardText style={{ fontSize: "10px" }}>
+              {" "}
+              {post.description || post.name.last}
+            </CardText>
+            <CardText style={{ fontSize: "10px" }}>
+              {" "}
+              {post.postName || post.email}
+            </CardText>
+            <CardText style={{ fontSize: "10px" }}>
+              {post.date || post.dob.date}
+            </CardText>
           </CardBody>
         </Card>
       </Col>
-
-
-</>
-  )
+    </>
+  );
 }
