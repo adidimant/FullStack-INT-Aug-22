@@ -17,4 +17,4 @@ function Bargraph({Data}:any) {
   )
 }
 
-export default Bargraph
+export default Bargraph;

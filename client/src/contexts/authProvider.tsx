@@ -1,4 +1,4 @@
-import { useState, createContext, useEffect, useCallback, useContext, Dispatch } from "react";
+import { useState, createContext, useLayoutEffect, useCallback, useContext, Dispatch } from "react";
 import { AxiosResponse } from 'axios';
 import apiClient from '../apiClient';
 import { useNavigate } from "react-router-dom";
@@ -26,19 +26,16 @@ const AuthHelper = function ({ children, authState, setAuthState }: { children: 
     navigate('/login');
   }, [authState]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const interceptor = apiClient.interceptors.response.use(
       (res) => res,
       (error: Error & { response: AxiosResponse }) => {
-        debugger;
-        if (authState.isLoggedIn && error?.response?.status === 401) {
-          debugger;
+        if (error?.response?.status === 401) {
           logout();
         }
 
-        debugger;
         alert(`Error from server, status: ${error?.response?.status}`);
-      },
+      }
     );
 
     return () => apiClient.interceptors.response.eject(interceptor);

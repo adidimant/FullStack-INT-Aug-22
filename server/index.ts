@@ -95,7 +95,7 @@ app.get('/GetGraphData/:username',async (req:Request,res:Response)=>{
   }
   
   
-})
+});
 
 app.post('/login', async (req:any, res:any) => {
   const username = req.body.username;
