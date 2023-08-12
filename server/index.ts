@@ -9,6 +9,7 @@ import { Session } from "./class/Session";
 import connectDB from "./mongoose/connection_mongoDB";
 import { authenticate,sessionLogger } from "./guards/sessionAuthenticator";
 import  { rate5Limiter,rate10Limiter,rate1800Limiter,rate20Limiter,rate30Limiter,rate3600Limiter,rate60Limiter } from './guards/RateLimit';
+import {authMiddleware} from "./guards/Authenticate"
 
 require("dotenv").config();
 const app = express();
@@ -32,6 +33,18 @@ app.use(cookieParser());
 // app.use(sessionLogger);
 app.set("view engine", "ejs");
 app.use("/images",express.static('Images'));
+
+const unless = function(path:any, middleware:any) {
+  return function(req:any, res:any, next:any) {
+      if (path === req.path) {
+          return next();
+      } else {
+          return middleware(req, res, next);
+      }
+  };
+};
+app.use(unless('/login', authMiddleware));
+
 
 const storage = multer.diskStorage({
   destination: function (req: any, file: Express.Multer.File, callback:(error: Error | null, destination: string) => void) {
