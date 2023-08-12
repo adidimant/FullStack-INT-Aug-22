@@ -7,6 +7,7 @@ import {
 } from "reactstrap";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import MainNav from "./MainNav";
 
 export default function CreatePost() {
   const [image,setImage] = useState("");
@@ -50,6 +51,7 @@ export default function CreatePost() {
 
   return (
     <>
+    <MainNav/>
       <Container className="d-flex align-items-center justify-content-center">
         <Form
           className="my-5 d-flex flex-column align-items-stretch"

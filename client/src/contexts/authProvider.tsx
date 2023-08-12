@@ -5,23 +5,26 @@ import { useNavigate } from "react-router-dom";
 
 type AuthContextType = {
   isLoggedIn: boolean;
+  userName:string;
 };
 
-export const AuthContext = createContext<{ state: AuthContextType; dispatch: Dispatch<AuthContextType> }>({ state: { isLoggedIn: false }, dispatch: () => undefined });
+export const AuthContext = createContext<{ state: AuthContextType; dispatch: Dispatch<AuthContextType> }>({ state: { isLoggedIn: false, userName:'' }, dispatch: () => undefined });
 
 const getDefaultAuthState = () => {
   return {
     isLoggedIn: false,
+    userName:'',
   };
 };
 
 const AuthHelper = function ({ children, authState, setAuthState }: { children: any, authState: AuthContextType, setAuthState: (newState: AuthContextType) => void }) {
   const navigate = useNavigate();
 
-  const logout = useCallback(() => {
+   const logout = useCallback(() => {
     setAuthState({
       ...authState,
       isLoggedIn: false,
+      
     });
     navigate('/login');
   }, [authState]);
@@ -33,7 +36,7 @@ const AuthHelper = function ({ children, authState, setAuthState }: { children: 
         if (error?.response?.status === 401) {
           logout();
         }
-
+        
         alert(`Error from server, status: ${error?.response?.status}`);
       }
     );
@@ -49,7 +52,7 @@ const AuthProvider = ({ children }: { children: any }) => {
 
   return (
     <AuthContext.Provider value={{ state: authState, dispatch: setAuthState }}>
-      <AuthHelper authState={authState} setAuthState={setAuthState} >
+      <AuthHelper authState={authState} setAuthState={setAuthState}>
         {children}
       </AuthHelper>
     </AuthContext.Provider>

@@ -6,6 +6,7 @@ import { FiInstagram } from "react-icons/fi";
 import { postsContext } from "../contexts/PostContext";
 import { useNavigate } from "react-router-dom";
 import axiosClient from "../apiClient";
+import MainNav from "./MainNav";
 
 export default function Posts() {
   const navigate = useNavigate();
@@ -42,7 +43,7 @@ export default function Posts() {
   }, [postsData]);
   return (
     <>
-    
+    <MainNav/>
       <div style={{ display: "flex", alignItems: "center" }}>
         <h5>Instegram </h5>
         <FiInstagram

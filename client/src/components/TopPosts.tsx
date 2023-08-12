@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useState } from "react";
 import { CardGroup, Container, Row } from "reactstrap";
 import { postsContext } from "../contexts/PostContext";
 import TopPost from "./TopPost";
+import MainNav from "./MainNav";
 
 export default function TopPosts() {
   const [postsData, setPostData] = useContext(postsContext);
@@ -23,8 +24,9 @@ export default function TopPosts() {
   const topDatePost: any = [];
 
   return (
-    <>
+    
       <>
+      <MainNav/>
         {topDatePost.forEach((post: any) => {
           return <p>{post as any}</p>;
         })}
@@ -45,6 +47,6 @@ export default function TopPosts() {
           </CardGroup>
         </Container>
       </>
-    </>
+ 
   );
 }
