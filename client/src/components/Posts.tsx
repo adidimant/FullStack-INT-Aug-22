@@ -7,7 +7,8 @@ import { postsContext } from "../contexts/PostContext";
 import { Link, useNavigate } from "react-router-dom";
 import axiosClient from "../apiClient";
 import { postModel } from "../models/postModel";
-import { TempLogout, useAuthContext } from "../contexts/authProvider";
+import { TempLogout } from "../contexts/authProvider";
+
 
 
 
@@ -25,9 +26,6 @@ export default function Posts() {
 
   return (
     <>
-    <Button onClick={TempLogout}>
-      LogOut
-    </Button>
       <div style={{ display: "flex", alignItems: "center" }}>
         <h5>Instegram </h5>
         <FiInstagram

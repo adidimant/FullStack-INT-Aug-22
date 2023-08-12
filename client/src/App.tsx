@@ -7,6 +7,7 @@ import Login from "./components/Login";
 import AuthProvider from './contexts/authProvider';
 import { Navigate } from "react-router-dom";
 import Overview from "./components/Overview";
+import LogOut from "./components/LogOut";
 
 
 
@@ -15,6 +16,7 @@ export default function App() {
     <>
     <AuthProvider>
       <PostsProvider>
+        <LogOut/>
         <Routes>
           <Route path="/Posts" element={<Posts />} />
           <Route path="/topPosts" element={<TopPosts />} />

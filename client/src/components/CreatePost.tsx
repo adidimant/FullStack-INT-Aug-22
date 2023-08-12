@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useAuthContext } from "../contexts/authProvider";
 
+
 export default function CreatePost() {
   const [image, setImage] = useState("");
   const navigate = useNavigate();
