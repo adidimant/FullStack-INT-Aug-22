@@ -10,4 +10,4 @@ export const authenticate = async (sessionId: string, username: string, expirati
     }
   }
   return false;
-}
+};
