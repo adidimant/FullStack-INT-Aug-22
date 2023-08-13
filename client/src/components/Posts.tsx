@@ -24,7 +24,7 @@ export default function Posts() {
       //   .catch((error) => {
       //     console.log(error);
       //   });
-      const response = await axiosClient.get("http://localhost:3031/getPosts/adi.dimant", {
+      const response = await axiosClient.get("http://localhost:3031/getPosts", {
         method: "GET",
         withCredentials: true,
       });

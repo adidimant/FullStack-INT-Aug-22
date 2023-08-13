@@ -7,6 +7,7 @@ export class Session {
   sessionId?: string;
   expirationTime: number;
   mongoose: Mongoose;
+ 
   private initPromise: Promise<boolean> | undefined;
   private setInitPromise: ((successFlag: boolean) => void) | undefined;
   constructor(
