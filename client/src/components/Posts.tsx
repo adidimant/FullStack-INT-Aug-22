@@ -4,27 +4,21 @@ import Post from "./Post";
 import { v4 as uuidv4 } from "uuid";
 import { FiInstagram } from "react-icons/fi";
 import { postsContext } from "../contexts/PostContext";
+import { useAuthContext } from "../contexts/authProvider";
 import { useNavigate } from "react-router-dom";
 import axiosClient from "../apiClient";
 
 export default function Posts() {
   const navigate = useNavigate();
   const postsData = useContext(postsContext);
+  const {username, dispatch: dispatchAuthContext } = useAuthContext();
   const [Posts,setPosts] = useState([])
   console.log(postsData);
 
   useEffect(() => {
     async function getDataFromServer() {
-      // axios
-      //   .get("http://localhostn:3031/getPosts")
-      //   .then((res) => {
-      //     console.log(res)
-      //    setPostData(res.data)
-      //   })
-      //   .catch((error) => {
-      //     console.log(error);
-      //   });
-      const response = await axiosClient.get("http://localhost:3031/getPosts/adi.dimant", {
+
+      const response = await axiosClient.get(`http://localhost:3031/getPosts/${username}`, {
         method: "GET",
         withCredentials: true,
       });
@@ -32,7 +26,7 @@ export default function Posts() {
       const setToContext = postsData[1] as Function
       //adding the posts to the context
       if (result) {
-        setToContext(result);
+        // setToContext(result);
         //adding the posts to the current state
         setPosts(result);
       }

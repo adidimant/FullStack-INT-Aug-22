@@ -12,8 +12,11 @@ ChartJS.register(
 
 function Bargraph({Data}:any) {
   return (
+<>
 
-    <Line data={Data}/>
+
+<Line data={Data}/>
+</>
   )
 }
 

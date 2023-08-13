@@ -4,14 +4,16 @@ import apiClient from '../apiClient';
 import { useNavigate } from "react-router-dom";
 
 type AuthContextType = {
-  isLoggedIn: boolean;
+  isLoggedIn: boolean,
+  username:string
 };
 
-export const AuthContext = createContext<{ state: AuthContextType; dispatch: Dispatch<AuthContextType> }>({ state: { isLoggedIn: false }, dispatch: () => undefined });
+export const AuthContext = createContext<{ state: AuthContextType; dispatch: Dispatch<AuthContextType> }>({ state: { isLoggedIn: false, username:'' }, dispatch: () => undefined });
 
 const getDefaultAuthState = () => {
   return {
     isLoggedIn: false,
+    username:''
   };
 };
 
