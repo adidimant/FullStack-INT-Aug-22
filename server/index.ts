@@ -143,12 +143,11 @@ app.post("/login", async (req: any, res: any) => {
 app.patch('/Logout',async (req,res)=>{
   try {
     const sessionId = req.cookies?.sessionId;
-    await SessionModel.findOneAndUpdate({id:sessionId},{isLoggedin:false});
+    await SessionModel.findOneAndUpdate({id:sessionId},{isLoggedin:false});//if we were checking with username also was it better?
     res.status(200).send('Logout Successfuly');
   } catch (error) {
     res.status(400).send('Logout Failed');
   }
-
 })
 
 

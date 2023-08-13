@@ -2,6 +2,7 @@ import { useState, createContext, useLayoutEffect, useCallback, useContext, Disp
 import { AxiosResponse } from 'axios';
 import apiClient from '../apiClient';
 import { useNavigate } from "react-router-dom";
+import axiosClient from "../apiClient";
 
 type AuthContextType = {
   isLoggedIn: boolean;
@@ -19,13 +20,14 @@ const getDefaultAuthState = () => {
  export let TempLogout : ()=>void;
 const AuthHelper = function ({ children, authState, setAuthState }: { children: any, authState: AuthContextType, setAuthState: (newState: AuthContextType) => void }) {
   const navigate = useNavigate();
-
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    const Out = await axiosClient.patch('http://localhost:3031/Logout',{userName:authState.userName},{withCredentials:true});
     setAuthState({
       ...authState,
       isLoggedIn: false,
       userName:''
     });
+   
     navigate('/login');
   }, [authState]);
 

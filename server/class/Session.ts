@@ -18,7 +18,6 @@ export class Session {
     this.userName = userName;
     this.expirationTime = expirationTime;
     this.mongoose = mongoose;
-
     this.initPromise = new Promise((res, rej) => {
       this.setInitPromise = res;
     });
