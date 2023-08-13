@@ -7,19 +7,19 @@ import axios from 'axios'
 
 const Nav = () => {
     const [isLoading, setIsLoading] = useState<boolean>(false)
-    const { dispatch: dispatchAuthContext, isLoggedIn } = useAuthContext()
-    const navigate = useNavigate()
+    const { dispatch: dispatchAuthContext, isLoggedIn } = useAuthContext();
+    const navigate = useNavigate();
 
     const logout = useCallback(() => {
-        setIsLoading(true)
-        dispatchAuthContext({ isLoggedIn: false })
+        setIsLoading(true);
         const deactivateSession = async () => {
-            await axios.post('http://localhost:3031/logout')
-            setIsLoading(false)
+            await axios.post('http://localhost:3031/logout', {}, { withCredentials: true });
+            dispatchAuthContext({ isLoggedIn: false });
+            setIsLoading(false);
         }
-        deactivateSession()
-        navigate('/Login')
-    }, [])
+        deactivateSession();
+        navigate('/Login');
+    }, [dispatchAuthContext, navigate]);
 
     return (
         <>
@@ -30,12 +30,14 @@ const Nav = () => {
                         style={{ color: "black", fontSize: "20px", margin: "5px" }}
                     />
                 </div>
+                {isLoggedIn && 
                 <Button
                     onClick={logout}
                 >
                     {isLoading && <Spinner/>}
                     Log Out
                 </Button>
+                }
             </div>
             <Outlet />
         </>

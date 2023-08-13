@@ -83,6 +83,12 @@ The endpoints should be authenticated via our authentication guard.
 6) If you didn't watch - watch this video about JWT authentication in express.js servers: https://www.youtube.com/watch?v=mbsmsi7l3r4.
 Link to recharts graphs for learning: https://recharts.org/en-US/examples/PercentAreaChart
 
+# H.W 09/08:
+- Emanual & Ori - perform `git pull` then `git merge origin/main` to your branch, remove your work on the logout - update only your work on the TopPosts & postsContext to be effected.
+- Esti - open your PR - only for the graph updates.
+- Progress on your final project
+- Go over our repository, try to explain to yourself & your teammate what is going on there.
+
 SQL databases are primarily called Relational Databases (RDBMS); whereas NoSQL databases are primarily called non-relational or distributed databases. 
 
 <!-- sql: -->
