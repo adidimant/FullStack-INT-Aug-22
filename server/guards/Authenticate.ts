@@ -12,6 +12,5 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
     return next();
   }
 
-  // If not authenticated, redirect to login page
-  res.redirect('/login');
+  res.status(401).send('Unauthorized for action!');
 }
