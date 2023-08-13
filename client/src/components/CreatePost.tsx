@@ -9,7 +9,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 export default function CreatePost() {
-  const [image,setImage] = useState("");
+  const [image, setImage] = useState("");
   const navigate = useNavigate();
 
   // const formElenemt = useRef() as any;
@@ -28,11 +28,11 @@ export default function CreatePost() {
     data.append("description", event.target.description.value);
     data.append("userName", event.target.userName.value);
     data.append("date", event.target.date.value);
- 
+
     axios
       .post("http://localhost:3031/upload-post", data)
       .then((res) => console.log("Request complete! response:", res));
-       navigate("/getPosts");
+    navigate("/getPosts");
     // await fetch("http://localhost:3031/upload-post", {
     //   method: "POST",
     //   body: data,
@@ -69,7 +69,7 @@ export default function CreatePost() {
           <Input id="date" type="date" placeholder="date" />
           <Button type="submit">Add New Post</Button>
         </Form>
-      </Container> 
+      </Container>
     </>
   );
 }

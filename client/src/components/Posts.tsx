@@ -2,7 +2,6 @@ import React, { useContext, useEffect, useState } from "react";
 import { Button, CardGroup, Container, Row } from "reactstrap";
 import Post from "./Post";
 import { v4 as uuidv4 } from "uuid";
-import { FiInstagram } from "react-icons/fi";
 import { postsContext } from "../contexts/PostContext";
 import { useNavigate } from "react-router-dom";
 import axiosClient from "../apiClient";
@@ -10,8 +9,8 @@ import axiosClient from "../apiClient";
 export default function Posts() {
   const navigate = useNavigate();
   const postsData = useContext(postsContext);
-  const [Posts,setPosts] = useState([])
-  console.log(postsData);
+  const [Posts, setPosts] = useState([])
+  // console.log(postsData);
 
   useEffect(() => {
     async function getDataFromServer() {
@@ -24,7 +23,7 @@ export default function Posts() {
       //   .catch((error) => {
       //     console.log(error);
       //   });
-      const response = await axiosClient.get("http://localhost:3031/getPosts/adi.dimant", {
+      const response = await axiosClient.get("http://localhost:3031/getPosts/yosefh@gmail.com", {
         method: "GET",
         withCredentials: true,
       });
@@ -37,19 +36,12 @@ export default function Posts() {
         setPosts(result);
       }
     }
-  
+
     getDataFromServer();
-  }, [postsData]);
+  }, []);
   return (
     <>
-    
-      <div style={{ display: "flex", alignItems: "center" }}>
-        <h5>Instegram </h5>
-        <FiInstagram
-          style={{ color: "black", fontSize: "20px", margin: "5px" }}
-        />
-      </div>
-      <Button onClick={()=>{navigate("/upload-post")}}>
+      <Button onClick={() => { navigate("/upload-post") }}>
         Add post
       </Button>
       <Container

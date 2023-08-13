@@ -31,9 +31,9 @@ const AuthHelper = function ({ children, authState, setAuthState }: { children: 
       (res) => res,
       (error: Error & { response: AxiosResponse }) => {
         if (error?.response?.status === 401) {
+          console.log(error);
           logout();
         }
-
         alert(`Error from server, status: ${error?.response?.status}`);
       }
     );
