@@ -22,7 +22,6 @@ app.use(cors({ credentials: true, origin: true, maxAge: 2592000, optionSuccessSt
 app.use(express.json());
 app.use(rate5Limiter,rate10Limiter,rate20Limiter,rate30Limiter,rate60Limiter,rate1800Limiter,rate3600Limiter);
 app.use(cookieParser());
-// app.use(sessionLogger);
 app.set("view engine", "ejs");
 app.use("/images",express.static('Images'));
 
@@ -49,7 +48,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // client-side query example: POST: 'http://localhost:3000/update-user/3069588493'; body: { address: 'Bugrashov 7, Tel-Aviv, Israel'}
-app.post('/update-user',authMiddleware, async (req:any, res:any) => {
+app.post('/update-user', async (req:any, res:any) => {
   const username = req.cookies?.username;
   const { address, email } = req.body;
 
