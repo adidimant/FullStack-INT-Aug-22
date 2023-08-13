@@ -3,15 +3,15 @@ import { Mongoose } from "mongoose";
 import { v4 as uuidv4 } from "uuid";
 
 export class Session {
-  userName: string| null;
+  userName: string | null;
   sessionId?: string;
   expirationTime: number;
   mongoose: Mongoose;
- 
+  isActive: boolean = false;
   private initPromise: Promise<boolean> | undefined;
   private setInitPromise: ((successFlag: boolean) => void) | undefined;
   constructor(
-    userName: string|null,
+    userName: string | null,
     expirationTime: number,
     mongoose: Mongoose,
     sessionId?: string
@@ -33,12 +33,14 @@ export class Session {
 
   private async initSession(sessionId?: string): Promise<void> {
     if (!sessionId) {
+      this.isActive = true;
       const myuuid = uuidv4();
       this.sessionId = myuuid; //the fix that was needed is to set the Session id before the creation in mongo
       const session = new SessionModel({
         id: myuuid,
         userName: this.userName,
         createdDate: Date.now(),
+        isActive: this.isActive
       });
       await session.save({ timestamps: { createdAt: true, updatedAt: false } }); //add time when creating the Session
     } else {
@@ -47,6 +49,15 @@ export class Session {
 
     if (this.setInitPromise) {
       this.setInitPromise(true);
+    }
+  }
+
+  public async deactivateSession(session: any) {
+    if (session) {
+      session.isActive = false;
+      await session.save();
+    } else {
+      throw new Error("Session not found");
     }
   }
 
@@ -66,6 +77,7 @@ export class Session {
   getUserName() {
     return this.userName;
   }
+
   async getSessionId() {
     if (await this.initPromise) {
       return this.sessionId;
@@ -82,6 +94,6 @@ export class Session {
     this.sessionId = sessionId;
   }
   setExpirationTime(expirationTime: number) {
-     this.expirationTime = expirationTime;
+    this.expirationTime = expirationTime;
   }
 }
