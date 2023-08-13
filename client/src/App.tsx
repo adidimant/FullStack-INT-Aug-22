@@ -20,6 +20,7 @@ export default function App() {
           <Route path="/topPosts" element={<TopPosts />} />
           <Route path="/upload-post" element={<CreatePost />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/Overview" element= {<Overview/>}/>
           <Route path="/" element={<Navigate to="/login" />} />
           <Route path="/overview" element={<Overview />} />
         </Routes>

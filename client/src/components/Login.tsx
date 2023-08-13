@@ -1,22 +1,23 @@
 import {
     Container,
-    FormGroup,
     Input,
     Button,
     Form,
-    InputGroup,
-    InputGroupText,
   } from "reactstrap";
   import { BsPersonCircle } from "react-icons/bs";
   import { FiInstagram } from "react-icons/fi";
 import axiosClient from "../apiClient";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuthContext } from "../contexts/authProvider";
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
+
+  const { dispatch: dispatchAuthContext } = useAuthContext();
+
   const getOnChange = (setFunc: (newValue: string) => void) => {
     const handleOnChange = (e: any) => {
       setFunc(e.target.value);
@@ -25,17 +26,16 @@ export default function Login() {
     return handleOnChange;
   };
 
+
   const login = async () => {
-    // debugger;
-    const response = await axiosClient.post('http://localhost:3031/login', { username: email, password },{withCredentials:true});
-    // debugger;
-    if(response.status === 200){
+    const response = await axiosClient.post('http://localhost:3031/login', { username: email, password },{ withCredentials:true });
+    if(response?.status === 200) {
+      dispatchAuthContext({ isLoggedIn: true });
       navigate('/Posts');
     }
     else{
       alert('username or password is incorrect');
     }
-    
   };
   
   return (
