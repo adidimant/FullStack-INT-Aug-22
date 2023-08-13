@@ -7,6 +7,7 @@ export class Session {
   sessionId?: string;
   expirationTime: number;
   mongoose: Mongoose;
+ 
   private initPromise: Promise<boolean> | undefined;
   private setInitPromise: ((successFlag: boolean) => void) | undefined;
   constructor(
@@ -34,11 +35,11 @@ export class Session {
     if (!sessionId) {
       const myuuid = uuidv4();
       this.sessionId = myuuid; //the fix that was needed is to set the Session id before the creation in mongo
+      const date = new Date()
       const session = new SessionModel({
         id: myuuid,
         userName: this.userName,
         createdDate: Date.now(),
-        
       });
       await session.save();
     } else {

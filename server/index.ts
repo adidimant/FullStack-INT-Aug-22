@@ -7,8 +7,9 @@ import { UserModel } from "./mongoose/userSchema";
 import { InstegramPostModel } from "./mongoose/InstegramPostSchema";
 import { Session } from "./class/Session";
 import connectDB from "./mongoose/connection_mongoDB";
-import { authenticate,sessionLogger } from "./guards/sessionAuthenticator";
+import { authenticate } from "./guards/sessionAuthenticator";
 import  { rate5Limiter,rate10Limiter,rate1800Limiter,rate20Limiter,rate30Limiter,rate3600Limiter,rate60Limiter } from './guards/RateLimit';
+import { SessionModel } from "./mongoose/SessionSchema";
 import {authMiddleware} from "./guards/Authenticate"
 
 require("dotenv").config();
@@ -45,7 +46,6 @@ const unless = function(path:any, middleware:any) {
 };
 app.use(unless('/login', authMiddleware));
 
-
 const storage = multer.diskStorage({
   destination: function (req: any, file: Express.Multer.File, callback:(error: Error | null, destination: string) => void) {
     callback(null, "./Images");
@@ -58,8 +58,8 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // client-side query example: POST: 'http://localhost:3000/update-user/3069588493'; body: { address: 'Bugrashov 7, Tel-Aviv, Israel'}
-app.post('/update-user/:username', async (req:any, res:any) => {
-  const username = req.params.username;
+app.post('/update-user/:username',authMiddleware, async (req:any, res:any) => {
+  const username = req.cookies?.username;
   const { address, email } = req.body;
   const sessionId = req.cookies?.sessionId;
 
@@ -76,7 +76,7 @@ app.post('/update-user/:username', async (req:any, res:any) => {
 
 
 app.get('/get-user-profile/:username', async (req:any, res:any) => {
-  const username = req.params.username;
+  const username = req.cookies?.username;
   const sessionId = req.cookies?.sessionId;
 
   if (await authenticate(sessionId, username, expirationTime, mongoose)) {
@@ -89,14 +89,31 @@ app.get('/get-user-profile/:username', async (req:any, res:any) => {
   }
 });
 
-app.get('/chart', async(req:any, res:any)=>{
-try{
-  res.send(sessionLogger)
-}
-catch(error){
-  console.log("Error", error )
-}})
+app.get('/GetGraphData/:username', async (req:Request,res:Response)=>{
+  try {
+    const sessionId = req.cookies.sessionId;
+    const username = req.cookies?.username;
 
+    if (await authenticate(sessionId, username, expirationTime, mongoose)){
+      const sessions = await SessionModel.find();
+      let numsOfLogin :any = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+      const currentDate = new Date();
+      sessions.forEach((session) => {
+        const createdDate = new Date();
+        createdDate.setTime(session?.createdDate as number);
+        
+        if(createdDate.getDay()===currentDate.getDay() && createdDate.getMonth()===currentDate.getMonth() && createdDate.getFullYear() === currentDate.getFullYear() ){
+          numsOfLogin[createdDate.getHours()]++;
+        }
+      });
+      res.status(200).send(numsOfLogin);
+    } else {
+      res.status(401).send('Unauthorized for action!');
+    }
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
 
 app.post('/login', async (req:any, res:any) => {
   const username = req.body.username;
@@ -104,11 +121,11 @@ app.post('/login', async (req:any, res:any) => {
   
 
   // Uncomment this if this is your first login - for creating your username in the db
-  const actualUser = new UserModel({
-    userName: username,
-    password,
-  });
-  await actualUser.save();
+  // const actualUser = new UserModel({
+  //   userName: username,
+  //   password,
+  // });
+  // await actualUser.save();
 
   const user = await UserModel.findOne({
     userName: username,
@@ -121,8 +138,8 @@ app.post('/login', async (req:any, res:any) => {
     const session = new Session(username, expirationTime, mongoose);
     // this class saves the session in mongo behind the scenes - in Session constructor
     const sessionId = await session.getSessionId();
-    await authenticate(sessionId as string, username, expirationTime, mongoose)
     res.cookie('sessionId', sessionId, { maxAge: expirationTime * 60 * 60000, httpOnly: true });
+    res.cookie('username', username, { maxAge: expirationTime * 60 * 60000, httpOnly: true });
     res.status(200).send('Login succesfully!');
   }
 });
@@ -157,7 +174,7 @@ app.get('/Check',(req:Request,res:Response)=>{
 })
 
 app.get("/getPosts/:username", async (req, res) => {
-  const username = req.params.username;
+  const username = req.cookies?.username;
   const sessionId = req.cookies?.sessionId;
   try {
     if (await authenticate(sessionId, username, expirationTime, mongoose)) {
@@ -175,9 +192,9 @@ app.get("/getPosts/:username", async (req, res) => {
   }
 });
 
-app.use("*", (req, res) => {
-  res.render("not-found");
-});
+// app.use("**", (req, res) => {
+//   res.render("not-found");
+// });
 
 app.listen(port, () => {
   console.log(`server is running on port ${port}`);

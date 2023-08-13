@@ -23,7 +23,7 @@ export default function Posts() {
       //   .catch((error) => {
       //     console.log(error);
       //   });
-      const response = await fetch("http://localhost:3031/getPosts/", {
+      const response = await fetch("http://localhost:3031/getPosts/`${user}`", {
         method: "GET",
         credentials: "include",
       });
