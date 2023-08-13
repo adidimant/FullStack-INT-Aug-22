@@ -10,6 +10,11 @@ import Overview from "./components/Overview";
 import Nav from "./components/Nav";
 
 export default function App() {
+
+  useEffect(() => {
+    
+  }, []);
+
   return (
     <AuthProvider>
       <PostsProvider>
