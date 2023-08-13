@@ -38,6 +38,7 @@ export class Session {
         id: myuuid,
         userName: this.userName,
         createdDate: Date.now(),
+        isLoggedin:true,
       });
       await session.save({ timestamps: { createdAt: true, updatedAt: false } }); //add time when creating the Session
     } else {
