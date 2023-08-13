@@ -67,7 +67,6 @@ app.post('/login', async (req: any, res: any) => {
   if (!user) {
     res.status(401).send('Bad username & password combination');
   } else {
-
     //NOTE: Why create new session if session exists in DB??
 
     const session = new Session(username, expirationTime, mongoose);
@@ -83,29 +82,13 @@ app.post('/logout', async (req, res) => {
   const sessionId = req.cookies?.sessionId;
   const session = new Session(null, expirationTime, mongoose, sessionId);
   const actSession = await session.getSession();
-  console.log(actSession);
-  const result = await session.deactivateSession(actSession)
-  console.log(result);
-  return res.send('200')
-})
-
-// MIDDLEWARE --------------------------------------------
-app.use('*/:username', async (req, res, next) => {
-  const username = req.params.username;
-  const sessionId = req.cookies?.sessionId;
-
-  const valid = await authenticate(sessionId, username, expirationTime, mongoose)
-
-  if (!valid) {
-    return res.status(401).send('Unauthorized for action!')
-  }
-
-  next()
-})
+  await session.deactivateSession(actSession);
+  return res.send('200');
+});
 
 //ROUTES--------------------------------------------------
 
-app.get("/getPosts/:username", async (req, res) => {
+app.get("/getPosts", async (req, res) => {
   try {
     let response = await axios.get("https://randomuser.me/api/?results=3");
     let data: any = response.data;
@@ -119,7 +102,7 @@ app.get("/getPosts/:username", async (req, res) => {
 });
 
 // client-side query example: POST: 'http://localhost:3000/update-user/3069588493'; body: { address: 'Bugrashov 7, Tel-Aviv, Israel'}
-app.post('/update-user/:username', async (req: any, res: any) => {
+app.post('/update-user', async (req: any, res: any) => {
   const { address, email } = req.body;
   const username = req.params.username
 
