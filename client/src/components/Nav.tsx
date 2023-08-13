@@ -12,7 +12,7 @@ const Nav = () => {
 
     const logout = useCallback(() => {
         setIsLoading(true)
-        dispatchAuthContext({ isLoggedIn: true })
+        dispatchAuthContext({ isLoggedIn: false })
         const deactivateSession = async () => {
             await axios.post('http://localhost:3031/logout')
             setIsLoading(false)
@@ -25,7 +25,7 @@ const Nav = () => {
         <>
             <div style={{ display: 'flex', justifyContent: 'space-between', margin: '1rem' }}>
                 <div style={{ display: "flex", alignItems: "center" }}>
-                    <h5>Instegram </h5>
+                    <h5>Instagram </h5>
                     <FiInstagram
                         style={{ color: "black", fontSize: "20px", margin: "5px" }}
                     />
