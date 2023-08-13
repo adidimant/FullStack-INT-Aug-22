@@ -1,14 +1,14 @@
 import React, { useEffect } from 'react'
 import { Button} from "reactstrap";
-import { TempLogout } from "../contexts/authProvider";
+import { TempLogout, useAuthContext } from "../contexts/authProvider";
 import { Location, useLocation } from 'react-router-dom';
 
 function LogOut() {
-  const Location:Location = useLocation();
+  const IsLoggedin = useAuthContext();
   
   return (
     <>
-    {Location.pathname !== '/login'?
+    {IsLoggedin.isLoggedIn?
      <Button onClick={TempLogout}>
     LogOut
   </Button>:
