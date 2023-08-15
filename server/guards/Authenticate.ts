@@ -14,7 +14,7 @@ import mongoose from "mongoose";
       if (await authenticate(sessionId, username, expirationTime, mongoose)) {
         // If authentication succeeds, move to the next middleware or route handler
         console.log('Authentication successful for', username);
-        next();
+        return  next();
       } else {
         res.status(401).send('Unauthorized for action!');
         //move to the login page --
