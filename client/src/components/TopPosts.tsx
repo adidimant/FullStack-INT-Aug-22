@@ -5,7 +5,10 @@ import TopPost from "./TopPost";
 
 export default function TopPosts() {
   const [postsData, setPostData] = useContext(postsContext);
-  console.log(postsData);
+
+  useEffect(() => {
+    console.log(postsData);
+  }, []);
 
   // function topDate() {
   //   const sortposts = postsData.sort(function (a, b) {
@@ -24,27 +27,25 @@ export default function TopPosts() {
 
   return (
     <>
-      <>
-        {topDatePost.forEach((post: any) => {
-          return <p>{post as any}</p>;
-        })}
-        <Container
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            marginTop: "50px",
-          }}
-        >
-          <CardGroup>
-            <Row>
-              {topDatePost.map((post: any) => {
-                return <TopPost post={post as any} />;
-              })}
-            </Row>
-          </CardGroup>
-        </Container>
-      </>
+      {topDatePost.forEach((post: any) => {
+        return <p>{post as any}</p>;
+      })}
+      <Container
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          marginTop: "50px",
+        }}
+      >
+        <CardGroup>
+          <Row>
+            {topDatePost.map((post: any) => {
+              return <TopPost post={post as any} />;
+            })}
+          </Row>
+        </CardGroup>
+      </Container>
     </>
   );
 }

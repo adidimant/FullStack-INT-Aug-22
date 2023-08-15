@@ -26,8 +26,8 @@ export default function Post({ post }: { post: any }) {
           }}
         >
 
-          <img src={ post.image? `http://localhost:3031/images/${post.image}` : post.picture.large } alt="" />
-      
+          <img src={post.image ? `http://localhost:3031/images/${post.image}` : post.picture.large} alt="" />
+
           <CardBody>
             <CardTitle style={{ fontSize: "12px", fontWeight: "bold" }}>
               {post.userName || post.name.first}
