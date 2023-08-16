@@ -9,13 +9,14 @@ export default function TopPosts() {
   const [Posts, setPosts]:any = useState([]);
 
   const sortbyDate = (result: any) => {
-    const dupResult = [...result].splice(3);
+    const dupResult = [...result];
     dupResult?.sort(function (object1: any, object2: any) {
       const date1 = new Date(object1?.date || object1?.dob.date);
       const date2 = new Date(object2?.date || object2?.dob.date);
       // to get a value that is either negative, positive, or zero.
       return date2.getTime() - date1.getTime();
     });
+    dupResult.splice(3);
     return dupResult;
   };
 
