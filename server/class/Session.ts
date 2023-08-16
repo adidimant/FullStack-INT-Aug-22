@@ -27,7 +27,6 @@ export class Session {
     this.initSession(sessionId);
   }
 
-
   public async getSession() {
     return await SessionModel.findOne({ id: this.sessionId });
   }
@@ -51,14 +50,6 @@ export class Session {
 
     if (this.setInitPromise) {
       this.setInitPromise(true);
-    }
-  }
-  public async deactivateSession(session: any) {
-    if (session) {
-      session.isActive = false;
-      await session.save();
-    } else {
-      throw new Error("Session not found");
     }
   }
 

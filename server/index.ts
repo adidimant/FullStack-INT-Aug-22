@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import multer from "multer";
 import axios from "axios";
 import cookieParser from "cookie-parser";
+
 import { UserModel } from "./mongoose/userSchema";
 import { InstegramPostModel } from "./mongoose/InstegramPostSchema";
 import { Session } from "./class/Session";
@@ -13,12 +14,14 @@ import { SessionModel } from "./mongoose/SessionSchema";
 import {authMiddleware} from "./guards/Authenticate";
 
 require("dotenv").config();
+const rateLimit = require('express-rate-limit');
+
+
 const app = express();
 const cors = require("cors");
 const port = process.env.PORT;
 const expirationTime = Number(process.env.SESSION_EXPIRATION_IN_HOURS) || 1/60;
 connectDB();
-
 app.use(
   cors({
     credentials: true,
@@ -27,7 +30,6 @@ app.use(
     optionSuccessStatus: 200,
   })
 );
-app.use(express.json());
 app.use(
   rate5Limiter,
   rate10Limiter,
@@ -37,13 +39,6 @@ app.use(
   rate1800Limiter,
   rate3600Limiter
 );
-// app.use(cookieParser());
-// app.use(authenticate);
-
-app.set("view engine", "ejs");
-app.use("/images", express.static("Images"));
-
-
 app.use(cors({ credentials: true, origin: true, maxAge: 2592000, optionSuccessStatus: 200 }));
 app.use(express.json());
 app.use(rate5Limiter, rate10Limiter, rate20Limiter, rate30Limiter, rate60Limiter, rate1800Limiter, rate3600Limiter);
@@ -62,6 +57,9 @@ const unless = function(path:any, middleware:any) {
 };
 app.use(unless('/login', authMiddleware));
 
+
+
+
 const storage = multer.diskStorage({
   destination: function (req: any, file: Express.Multer.File, callback: (error: Error | null, destination: string) => void) {
     callback(null, "./Images");
@@ -72,32 +70,6 @@ const storage = multer.diskStorage({
   },
 });
 const upload = multer({ storage });
-
-
-// client-side query example: POST: 'http://localhost:3000/update-user/3069588493'; body: { address: 'Bugrashov 7, Tel-Aviv, Israel'}
-app.post("/update-user/:username", async (req: any, res: any) => {
-  const username = req.params.username;
-  const { address, email } = req.body;
-  const sessionId = req.cookies?.sessionId;
-  // save new user data in database - by username
-  await UserModel.updateOne(
-    {
-      userName: username,
-    },
-    { address, email }
-  );
-  res.status(200).send("User updated successfully!");
-});
-
-app.get("/get-user-profile/:username", async (req: any, res: any) => {
-  const username = req.params.username;
-  const sessionId = req.cookies?.sessionId;
-  const user = await UserModel.findOne({
-    userName: username,
-  });
-  res.json(user);
-});
-
 app.get("/overview/:username", async (req: any, res: any) => {
   const username = req.params.username
   try{
@@ -124,32 +96,6 @@ app.get("/overview/:username", async (req: any, res: any) => {
 }
 });
 
-
-app.get("/GetGraphData", async (req: Request, res: Response) => {
-  try {
-    const sessions = await SessionModel.find();
-    let numsOfLogin: any = [
-      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    ];
-    const currentDate = new Date();
-    sessions.forEach((session) => {
-      const createdDate = new Date();
-      createdDate.setTime(session?.createdDate as number);
-
-      if (
-        createdDate.getDay() === currentDate.getDay() &&
-        createdDate.getMonth() === currentDate.getMonth() &&
-        createdDate.getFullYear() === currentDate.getFullYear()
-      ) {
-        numsOfLogin[createdDate.getHours()]++;
-      }
-    });
-    res.status(200).send(numsOfLogin);
-  } catch (error) {
-    res.status(500).send(error);
-  }
-});
-
 app.post('/login', async (req: any, res: any) => {
   const username = req.body.username;
   const password = req.body.password;
@@ -167,24 +113,18 @@ app.post('/login', async (req: any, res: any) => {
   });
 
   if (!user) {
-    res.status(401).send("Bad username & password combination");
+    res.status(401).send('Bad username & password combination');
   } else {
     //NOTE: Why create new session if session exists in DB??
 
     const session = new Session(username, expirationTime, mongoose);
     // this class saves the session in mongo behind the scenes - in Session constructor
     const sessionId = await session.getSessionId();
-    res.cookie("sessionId", sessionId, {
-      maxAge: expirationTime * 60 * 60000,
-      httpOnly: true,
-      sameSite: "none",
-      secure: true,
-    });
-    res.status(200).send("Login succesfully!");
+    res.cookie('sessionId', sessionId, { maxAge: expirationTime * 60 * 60000, httpOnly: true });
+    res.cookie('username', username, { maxAge: expirationTime * 60 * 60000, httpOnly: true });
+    res.status(200).send('Login succesfully!');
   }
 });
-
-
 
 app.post('/logout', async (req, res) => {
   const sessionId = req.cookies?.sessionId;
@@ -252,7 +192,8 @@ app.get('/GetGraphData/:username', async (req: Request, res: Response) => {
 });
 
 //client-side query example: POST: 'http://localhost:3000/upload-post'; body: { postname, description, userName, data, image }
-app.post("/upload-post/:username", upload.single("image"), async (req, res) => {
+
+app.post("/upload-post", upload.single("image"), async (req, res) => {
   try {
     const image = req.file;
     const { postName, description, userName, date } = req.body;
@@ -272,22 +213,6 @@ app.post("/upload-post/:username", upload.single("image"), async (req, res) => {
     res.status(501);
   }
 });
-
-app.get("/getPosts/:username", async (req, res) => {
-  // const username = req.params.username;
-  // const sessionId = req.cookies?.sessionId;
-  try {
-    let response = await axios.get("https://randomuser.me/api/?results=3");
-    let data: any = response.data;
-    const newPosts = await InstegramPostModel.find();
-
-    return res.send(data.results.concat(newPosts));
-  } catch (error) {
-    console.log(error);
-    // res.render("server-error");
-  }
-});
-
 
 
 app.get('/Check', (req: Request, res: Response) => {
