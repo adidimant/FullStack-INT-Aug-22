@@ -7,12 +7,12 @@ import { UserModel } from "./mongoose/userSchema";
 import { InstegramPostModel } from "./mongoose/InstegramPostSchema";
 import { Session } from "./class/Session";
 import connectDB from "./mongoose/connection_mongoDB";
-import { authenticate } from "./guards/sessionAuthenticator";
 import { rate5Limiter, rate10Limiter, rate1800Limiter, rate20Limiter, rate30Limiter, rate3600Limiter, rate60Limiter } from './guards/RateLimit';
 import { SessionModel } from "./mongoose/SessionSchema";
-import {authMiddleware} from "./guards/Authenticate";
+import { authMiddleware } from "./guards/Authenticate";
 
 require("dotenv").config();
+
 const app = express();
 const cors = require("cors");
 const port = process.env.PORT;
@@ -124,7 +124,8 @@ app.get('/get-user-profile/:username', async (req: any, res: any) => {
   res.json(user);
 });
 
-app.get('/GetGraphData/:username', async (req: Request, res: Response) => {
+app.get('/UsersOverview',  async (req: Request, res: Response) => {
+  const username = req.cookies?.username
   try {
     const sessions = await SessionModel.find();
     let numsOfLogin :any = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
@@ -143,6 +144,31 @@ app.get('/GetGraphData/:username', async (req: Request, res: Response) => {
   }
 });
 
+app.get("/UserOverview", async (req: any, res: any) => {
+  const username = req.cookies?.username
+  try{
+    const sessionUser = await SessionModel.find({userName:username});
+    let numsOfLogin: any = [
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    ];
+    const currentDate = new Date();
+    sessionUser.forEach((session) => {
+      const createdDate = new Date();
+      createdDate.setTime(session?.createdDate as number);
+  
+      if (
+        createdDate.getDay() === currentDate.getDay() &&
+        createdDate.getMonth() === currentDate.getMonth() &&
+        createdDate.getFullYear() === currentDate.getFullYear()
+      ) {
+        numsOfLogin[createdDate.getHours()]++;
+      }
+    });
+    res.status(200).send({numsOfLogin, username});
+  } catch (error) {
+  res.status(500).send(error);
+}
+});
 //client-side query example: POST: 'http://localhost:3000/upload-post'; body: { postname, description, userName, data, image }
 
 app.post("/upload-post", upload.single("image"), async (req, res) => {
