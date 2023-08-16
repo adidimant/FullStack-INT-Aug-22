@@ -1,4 +1,3 @@
-import axios from "axios";
 import { useEffect, useState } from "react";
 import {
   AreaChart,
@@ -9,7 +8,6 @@ import {
   Tooltip,
 } from "recharts";
 import { curveCardinal } from "d3-shape";
-import { useAuthContext } from "../../contexts/authProvider";
 import axiosClient from "../../apiClient";
 
 export default function UserOverview() {
