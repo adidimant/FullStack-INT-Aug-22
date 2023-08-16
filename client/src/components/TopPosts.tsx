@@ -8,8 +8,8 @@ export default function TopPosts() {
   const [postsData, setPostsDATA]:any = useContext(postsContext);
   const [Posts, setPosts]:any = useState([]);
 
-  const SortbyDate = (result: any) => {
-    const dupResult = [...result];
+  const sortbyDate = (result: any) => {
+    const dupResult = [...result].splice(3);
     dupResult?.sort(function (object1: any, object2: any) {
       const date1 = new Date(object1?.date || object1?.dob.date);
       const date2 = new Date(object2?.date || object2?.dob.date);
@@ -21,7 +21,7 @@ export default function TopPosts() {
 
 
 useEffect(() => {
-    setPosts(SortbyDate(postsData));
+    setPosts(sortbyDate(postsData));
   }, [postsData]);//setting the current state 
 
   
