@@ -27,7 +27,18 @@ const AuthHelper = function ({ children, authState, setAuthState }: { children: 
   }, [authState]);
 
   useLayoutEffect(() => {
-    const interceptor = apiClient.interceptors.response.use(
+    const interceptorRequests = apiClient.interceptors.request.use(
+      (req) => {
+        const accessToken = window.localStorage.getItem('accessToken');
+        if (accessToken) {
+          req.headers.Authorization = `Bearer ${accessToken}`;
+        }
+        return req;
+      },
+      (error: Error) => error,
+    );
+
+    const interceptorResponses = apiClient.interceptors.response.use(
       (res) => res,
       (error: Error & { response: AxiosResponse }) => {
         if (error?.response?.status === 401) {
@@ -38,7 +49,10 @@ const AuthHelper = function ({ children, authState, setAuthState }: { children: 
       }
     );
 
-    return () => apiClient.interceptors.response.eject(interceptor);
+    return () => {
+      apiClient.interceptors.response.eject(interceptorRequests);
+      apiClient.interceptors.response.eject(interceptorResponses);
+    }
   }, [authState]);
 
   return <>{children}</>;
