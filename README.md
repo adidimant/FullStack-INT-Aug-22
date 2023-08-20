@@ -8,6 +8,10 @@ Installation steps:
 1) `cd server`, then - `npm i`
 2) if you run mongo in Atlas - update MONGO_URI in your .env file 
 3) if you run mongo locally - do "To run mongo locally" steps
+4) make sure you generated your two keys:
+- run node
+- require('crypto').randomBytes(64).toString('hex') -> save it in ACCESS_TOKEN_SECRET
+- run again require('crypto').randomBytes(64).toString('hex') -> save it in REFRESH_TOKEN_SECRET
 4) run `npm start`
 
 # To run mongo locally:

@@ -2,6 +2,7 @@ import express, { Request, Response } from "express";
 import mongoose from "mongoose";
 import multer from "multer";
 import axios from 'axios';
+import jwt from 'jsonwebtoken';
 import cookieParser from "cookie-parser";
 import { UserModel } from "./mongoose/userSchema";
 import { InstegramPostModel } from "./mongoose/InstegramPostSchema";
@@ -11,12 +12,19 @@ import { rate5Limiter, rate10Limiter, rate1800Limiter, rate20Limiter, rate30Limi
 import { SessionModel } from "./mongoose/SessionSchema";
 import { authMiddleware } from "./guards/Authenticate";
 
-require("dotenv").config();
+const SUPPORTED_AUTHENTICATION_MGMT_METHODS = ['token', 'session'];
 
+require("dotenv").config();
 const app = express();
 const cors = require("cors");
 const port = process.env.PORT;
 const expirationTime = Number(process.env.SESSION_EXPIRATION_IN_HOURS) || 1/60;
+
+// Validating AUTHENTICATION_MGMT_METHOD env variable to ensure it's defined & one of the supported methods
+if (!SUPPORTED_AUTHENTICATION_MGMT_METHODS.includes(process.env.AUTHENTICATION_MGMT_METHOD || '')) {
+  throw new Error('critical env variable AUTHENTICATION_MGMT_METHOD is missing!');
+}
+
 connectDB();
 
 app.use(cors({ credentials: true, origin: true, maxAge: 2592000, optionSuccessStatus: 200 }));
@@ -67,14 +75,18 @@ app.post('/login', async (req: any, res: any) => {
   if (!user) {
     res.status(401).send('Bad username & password combination');
   } else {
-    //NOTE: Why create new session if session exists in DB??
-
-    const session = new Session(username, expirationTime, mongoose);
-    // this class saves the session in mongo behind the scenes - in Session constructor
-    const sessionId = await session.getSessionId();
-    res.cookie('sessionId', sessionId, { maxAge: expirationTime * 60 * 60000, httpOnly: true });
-    res.cookie('username', username, { maxAge: expirationTime * 60 * 60000, httpOnly: true });
-    res.status(200).send('Login succesfully!');
+    if (process.env.AUTHENTICATION_MGMT_METHOD == 'token') {
+      const payload = { name: username };
+      const accessToken = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET || '');
+      res.status(200).json({ accessToken });
+    } else { // process.env.AUTHENTICATION_MGMT_METHOD == 'session'
+      const session = new Session(username, expirationTime, mongoose); // NOTE: Why create new session if session exists in DB??
+      // this class saves the session in mongo behind the scenes - in Session constructor
+      const sessionId = await session.getSessionId();
+      res.cookie('sessionId', sessionId, { maxAge: expirationTime * 60 * 60000, httpOnly: true });
+      res.cookie('username', username, { maxAge: expirationTime * 60 * 60000, httpOnly: true });
+      res.status(200).send('Login succesfully!');
+    }
   }
 });
 
@@ -123,7 +135,6 @@ app.get('/get-user-profile/:username', async (req: any, res: any) => {
   });
   res.json(user);
 });
-
 app.get('/UsersOverview',  async (req: Request, res: Response) => {
   const username = req.cookies?.username
   try {
