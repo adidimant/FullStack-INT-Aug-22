@@ -39,18 +39,27 @@ const AuthHelper = function ({ children, authState, setAuthState }: { children: 
     );
 
     const interceptorResponses = apiClient.interceptors.response.use(
-      (res) => res,
-      (error: Error & { response: AxiosResponse }) => {
+      (res: AxiosResponse) => res,
+      async (error: Error & { response: AxiosResponse }) => {
         if (error?.response?.status === 401) {
-          console.log(error);
-          logout();
+          const refreshToken = window.localStorage.getItem('refreshToken');
+          if (refreshToken) {
+            const response = await apiClient.post('http://localhost:3031/token', { refreshToken });
+            const accessToken = response.data?.accessToken;
+            if (accessToken) {
+              window.localStorage.setItem('accessToken', accessToken);
+            }
+          } else {
+            console.log(error);
+            logout();
+          }
         }
         alert(`Error from server, status: ${error?.response?.status}`);
       }
     );
 
     return () => {
-      apiClient.interceptors.response.eject(interceptorRequests);
+      apiClient.interceptors.request.eject(interceptorRequests);
       apiClient.interceptors.response.eject(interceptorResponses);
     }
   }, [authState]);
