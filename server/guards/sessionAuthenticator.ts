@@ -1,7 +1,7 @@
 import { Mongoose } from 'mongoose';
 import { Session } from '../class/Session';
 
-export const authenticate = async (sessionId: string, username: string, expirationTime: number, mongoose: Mongoose): Promise<boolean> => {
+export const sessionAuthenticate = async (sessionId: string, username: string, expirationTime: number, mongoose: Mongoose): Promise<boolean> => {
   if (typeof sessionId == 'string') {
     const session = new Session(null, expirationTime, mongoose, sessionId);
     const actSession = await session.getSession(); // session = call mongodb - get session by sessionId

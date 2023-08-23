@@ -42,7 +42,9 @@ export default function Login() {
     const response = await axiosClient.post('http://localhost:3031/login', { username: email, password }, { withCredentials: true });
     if (response?.status === 200) {
       const accessToken = response?.data?.accessToken;
+      const refreshToken = response?.data?.refreshToken;
       window.localStorage.setItem('accessToken', accessToken);
+      window.localStorage.setItem('refreshToken', refreshToken);
       dispatchAuthContext({ isLoggedIn: true });
       navigate('/Posts');
     } else {
