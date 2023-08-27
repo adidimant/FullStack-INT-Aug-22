@@ -23,6 +23,8 @@ const AuthHelper = function ({ children, authState, setAuthState }: { children: 
       ...authState,
       isLoggedIn: false,
     });
+    window.localStorage.removeItem('accessToken');
+    window.localStorage.removeItem('refreshToken');
     navigate('/login');
   }, [authState]);
 
@@ -45,9 +47,11 @@ const AuthHelper = function ({ children, authState, setAuthState }: { children: 
           const refreshToken = window.localStorage.getItem('refreshToken');
           if (refreshToken) {
             const response = await apiClient.post('http://localhost:3031/token', { refreshToken });
-            const accessToken = response.data?.accessToken;
+            const accessToken = response?.data?.accessToken;
             if (accessToken) {
               window.localStorage.setItem('accessToken', accessToken);
+            } else {
+              logout();
             }
           } else {
             console.log(error);

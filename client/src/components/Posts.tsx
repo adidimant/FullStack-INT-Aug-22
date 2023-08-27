@@ -2,19 +2,22 @@ import React, { useContext, useEffect, useState } from "react";
 import { Button, CardGroup, Container, Row } from "reactstrap";
 import Post from "./Post";
 import { v4 as uuidv4 } from "uuid";
-import { postsContext } from "../contexts/PostContext";
+import { PostsContext } from "../contexts/PostContext";
 import { Link, useNavigate } from "react-router-dom";
-import axiosClient from "../apiClient";
 
 export default function Posts() {
   const navigate = useNavigate();
-  const [postsData,setPostsData]:any = useContext(postsContext);
+  const [postsData,setPostsData,refreshPosts]:any = useContext(PostsContext);
   const [Posts, setPosts] = useState([])
   // console.log(postsData);
 
   useEffect(() => {
  setPosts(postsData);
   }, [postsData]);
+
+  useEffect(() => {
+    refreshPosts();
+  }, []);
   return (
     <>
    

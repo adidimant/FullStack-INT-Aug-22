@@ -105,7 +105,7 @@ app.post('/token', async (req: any, res) => {
             return res.status(200).json({ accessToken });
           }
         }
-      }); 
+      });
     }
   }
   return res.status(401).send('Unauthorized for this action!');
