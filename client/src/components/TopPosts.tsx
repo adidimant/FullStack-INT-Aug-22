@@ -1,11 +1,11 @@
 import React, { useContext, useEffect, useState } from "react";
 import { CardGroup, Container, Row } from "reactstrap";
-import { postsContext } from "../contexts/PostContext";
+import { PostsContext } from "../contexts/PostContext";
 import TopPost from "./TopPost";
 import { Link } from "react-router-dom";
 
 export default function TopPosts() {
-  const [postsData, setPostsDATA]:any = useContext(postsContext);
+  const [postsData, setPostsData]:any = useContext(PostsContext);
   const [Posts, setPosts]:any = useState([]);
 
   const sortbyDate = (result: any) => {
@@ -23,10 +23,7 @@ export default function TopPosts() {
 
 useEffect(() => {
     setPosts(sortbyDate(postsData));
-  }, [postsData]);//setting the current state 
-
-  
-
+  }, [postsData]);//setting the current state
 
   return (
     <>
