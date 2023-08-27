@@ -10,8 +10,9 @@ type AuthContextType = {
 export const AuthContext = createContext<{ state: AuthContextType; dispatch: Dispatch<AuthContextType> }>({ state: { isLoggedIn: false }, dispatch: () => undefined });
 
 const getDefaultAuthState = () => {
+  const isAccessToken = window.localStorage.getItem('accessToken'); 
   return {
-    isLoggedIn: false,
+    isLoggedIn: isAccessToken ? true : false,
   };
 };
 
