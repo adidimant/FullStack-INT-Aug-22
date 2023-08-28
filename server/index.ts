@@ -126,8 +126,8 @@ app.post("/login", async (req: any, res: any) => {
     res.status(401).send("Bad username & password combination");
   } else {
     if (!user.password) {
-      res.status(500).send("User password is missing");
-      return;
+      return res.status(500).send("User password is missing");
+
       //note:
       // By adding this check, you're making sure that the password is present before attempting to use it
       //  in the bcrypt.compare() function, avoiding the type error you encountered.
@@ -136,7 +136,7 @@ app.post("/login", async (req: any, res: any) => {
     const match = await bcrypt.compare(password, user?.password);
 
     if (!match) {
-      res.status(401).send("Bad username & password combination");
+      return res.status(401).send("Bad username & password combination");
     } else {
       //login
       if (process.env.AUTHENTICATION_MGMT_METHOD == "token") {
@@ -152,7 +152,7 @@ app.post("/login", async (req: any, res: any) => {
         );
         VALID_TOKENS[username] = accessToken;
         REFRESH_TOKENS[username] = refreshToken;
-        res.status(200).json({ accessToken, refreshToken });
+       return res.status(200).json({ accessToken, refreshToken });
       } else {
         // process.env.AUTHENTICATION_MGMT_METHOD == 'session'
         const session = new Session(username, expirationTime, mongoose); // NOTE: Why create new session if session exists in DB??
@@ -166,7 +166,7 @@ app.post("/login", async (req: any, res: any) => {
           maxAge: expirationTime * 60 * 60000,
           httpOnly: true,
         });
-        res.status(200).send("Login succesfully!");
+        return res.status(200).send("Login succesfully!");
       }
     }
   }
