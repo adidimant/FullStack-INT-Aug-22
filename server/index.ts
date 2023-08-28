@@ -1,18 +1,32 @@
 import express, { Request, Response } from "express";
+import bcrypt from "bcrypt";
 import mongoose from "mongoose";
 import multer from "multer";
-import axios from 'axios';
-import jwt from 'jsonwebtoken';
+import axios from "axios";
+import jwt from "jsonwebtoken";
 import cookieParser from "cookie-parser";
 import { UserModel } from "./mongoose/userSchema";
 import { InstegramPostModel } from "./mongoose/InstegramPostSchema";
 import { Session } from "./class/Session";
 import connectDB from "./mongoose/connection_mongoDB";
-import { rate5Limiter, rate10Limiter, rate1800Limiter, rate20Limiter, rate30Limiter, rate3600Limiter, rate60Limiter } from './guards/RateLimit';
+import {
+  rate5Limiter,
+  rate10Limiter,
+  rate1800Limiter,
+  rate20Limiter,
+  rate30Limiter,
+  rate3600Limiter,
+  rate60Limiter,
+} from "./guards/RateLimit";
 import { SessionModel } from "./mongoose/SessionSchema";
-import { VALID_TOKENS, getUsernameByReq, authMiddleware, REFRESH_TOKENS } from "./guards/Authenticate";
+import {
+  VALID_TOKENS,
+  getUsernameByReq,
+  authMiddleware,
+  REFRESH_TOKENS,
+} from "./guards/Authenticate";
 
-const SUPPORTED_AUTHENTICATION_MGMT_METHODS = ['token', 'session'];
+const SUPPORTED_AUTHENTICATION_MGMT_METHODS = ["token", "session"];
 
 require("dotenv").config();
 const app = express();
@@ -21,98 +35,207 @@ const port = process.env.PORT;
 const expirationTime = Number(process.env.SESSION_EXPIRATION_IN_HOURS) || 1;
 
 // Validating AUTHENTICATION_MGMT_METHOD env variable to ensure it's defined & one of the supported methods
-if (!SUPPORTED_AUTHENTICATION_MGMT_METHODS.includes(process.env.AUTHENTICATION_MGMT_METHOD || '')) {
-  throw new Error('critical env variable AUTHENTICATION_MGMT_METHOD is missing!');
+if (
+  !SUPPORTED_AUTHENTICATION_MGMT_METHODS.includes(
+    process.env.AUTHENTICATION_MGMT_METHOD || ""
+  )
+) {
+  throw new Error(
+    "critical env variable AUTHENTICATION_MGMT_METHOD is missing!"
+  );
 }
 
 connectDB();
 
-app.use(cors({ credentials: true, origin: true, maxAge: 2592000, optionSuccessStatus: 200 }));
+app.use(
+  cors({
+    credentials: true,
+    origin: true,
+    maxAge: 2592000,
+    optionSuccessStatus: 200,
+  })
+);
 app.use(express.json());
-app.use(rate5Limiter, rate10Limiter, rate20Limiter, rate30Limiter, rate60Limiter, rate1800Limiter, rate3600Limiter);
+app.use(
+  rate5Limiter,
+  rate10Limiter,
+  rate20Limiter,
+  rate30Limiter,
+  rate60Limiter,
+  rate1800Limiter,
+  rate3600Limiter
+);
 app.use(cookieParser());
 app.set("view engine", "ejs");
-app.use("/images", express.static('Images'));
+app.use("/images", express.static("Images"));
 
-const unless = function(pathsToIgnoreMiddleware: string[], middleware:any) {
-  return function(req:any, res:any, next:any) {
-      if (pathsToIgnoreMiddleware.includes(req.path)) {
-          return next();
-      } else {
-          return middleware(req, res, next);
-      }
+const unless = function (pathsToIgnoreMiddleware: string[], middleware: any) {
+  return function (req: any, res: any, next: any) {
+    if (pathsToIgnoreMiddleware.includes(req.path)) {
+      return next();
+    } else {
+      return middleware(req, res, next);
+    }
   };
 };
-app.use(unless(['/login', '/token'], authMiddleware));
+app.use(unless(["/login", "/token"], authMiddleware));
 
 const storage = multer.diskStorage({
-  destination: function (req: any, file: Express.Multer.File, callback: (error: Error | null, destination: string) => void) {
+  destination: function (
+    req: any,
+    file: Express.Multer.File,
+    callback: (error: Error | null, destination: string) => void
+  ) {
     callback(null, "./Images");
   },
-  filename: function (req: any, file: Express.Multer.File, callback: (error: Error | null, destination: string) => void) {
+  filename: function (
+    req: any,
+    file: Express.Multer.File,
+    callback: (error: Error | null, destination: string) => void
+  ) {
     // console.log(file);
     callback(null, `${file.originalname}_${Date.now()}`);
   },
 });
 const upload = multer({ storage });
 
-app.post('/login', async (req: any, res: any) => {
+app.post("/login", async (req: any, res: any) => {
   const username = req.body.username;
-  const password = req.body.password;
-  
+  let password = req.body.password;
+
   // Uncomment this if this is your first login - for creating your username in the db
+  // FIRST ANSWER -REGISTRARION:
+
+  // const saltRounds = 10;
+  // const hashedPassword = await bcrypt.hash(password, saltRounds);
+  // password = hashedPassword;
+
   // const actualUser = new UserModel({
   //   userName: username,
   //   password,
   // });
   // await actualUser.save();
+  // FIRST ANSWER -REGISTRARION:------------------------->
 
+  //... fetch user from a db etc.
   const user = await UserModel.findOne({
     userName: username,
-    password,
+    // password,
   });
-
   if (!user) {
-    res.status(401).send('Bad username & password combination');
+    res.status(401).send("Bad username & password combination");
   } else {
-    if (process.env.AUTHENTICATION_MGMT_METHOD == 'token') {
-      const payload = { name: username };
-      const accessToken = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET || '', { expiresIn: `${expirationTime}h` });
-      const refreshToken = jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET || '');
-      VALID_TOKENS[username] = accessToken;
-      REFRESH_TOKENS[username] = refreshToken;
-      res.status(200).json({ accessToken, refreshToken });
-    } else { // process.env.AUTHENTICATION_MGMT_METHOD == 'session'
-      const session = new Session(username, expirationTime, mongoose); // NOTE: Why create new session if session exists in DB??
-      // this class saves the session in mongo behind the scenes - in Session constructor
-      const sessionId = await session.getSessionId();
-      res.cookie('sessionId', sessionId, { maxAge: expirationTime * 60 * 60000, httpOnly: true });
-      res.cookie('username', username, { maxAge: expirationTime * 60 * 60000, httpOnly: true });
-      res.status(200).send('Login succesfully!');
+    if (!user.password) {
+      res.status(500).send("User password is missing");
+      return;
+      //note:
+      // By adding this check, you're making sure that the password is present before attempting to use it
+      //  in the bcrypt.compare() function, avoiding the type error you encountered.
+    }
+
+    const match = await bcrypt.compare(password, user?.password);
+
+    if (!match) {
+      res.status(401).send("Bad username & password combination");
+    } else {
+      //login
+      if (process.env.AUTHENTICATION_MGMT_METHOD == "token") {
+        const payload = { name: username };
+        const accessToken = jwt.sign(
+          payload,
+          process.env.ACCESS_TOKEN_SECRET || "",
+          { expiresIn: `${expirationTime}h` }
+        );
+        const refreshToken = jwt.sign(
+          payload,
+          process.env.REFRESH_TOKEN_SECRET || ""
+        );
+        VALID_TOKENS[username] = accessToken;
+        REFRESH_TOKENS[username] = refreshToken;
+        res.status(200).json({ accessToken, refreshToken });
+      } else {
+        // process.env.AUTHENTICATION_MGMT_METHOD == 'session'
+        const session = new Session(username, expirationTime, mongoose); // NOTE: Why create new session if session exists in DB??
+        // this class saves the session in mongo behind the scenes - in Session constructor
+        const sessionId = await session.getSessionId();
+        res.cookie("sessionId", sessionId, {
+          maxAge: expirationTime * 60 * 60000,
+          httpOnly: true,
+        });
+        res.cookie("username", username, {
+          maxAge: expirationTime * 60 * 60000,
+          httpOnly: true,
+        });
+        res.status(200).send("Login succesfully!");
+      }
     }
   }
+
+  //...
+
+  // if (!user) {
+  //   res.status(401).send("Bad username & password combination");
+  // } else {
+  //   if (process.env.AUTHENTICATION_MGMT_METHOD == "token") {
+  //     const payload = { name: username };
+  //     const accessToken = jwt.sign(
+  //       payload,
+  //       process.env.ACCESS_TOKEN_SECRET || "",
+  //       { expiresIn: `${expirationTime}h` }
+  //     );
+  //     const refreshToken = jwt.sign(
+  //       payload,
+  //       process.env.REFRESH_TOKEN_SECRET || ""
+  //     );
+  //     VALID_TOKENS[username] = accessToken;
+  //     REFRESH_TOKENS[username] = refreshToken;
+  //     res.status(200).json({ accessToken, refreshToken });
+  //   } else {
+  //     // process.env.AUTHENTICATION_MGMT_METHOD == 'session'
+  //     const session = new Session(username, expirationTime, mongoose); // NOTE: Why create new session if session exists in DB??
+  //     // this class saves the session in mongo behind the scenes - in Session constructor
+  //     const sessionId = await session.getSessionId();
+  //     res.cookie("sessionId", sessionId, {
+  //       maxAge: expirationTime * 60 * 60000,
+  //       httpOnly: true,
+  //     });
+  //     res.cookie("username", username, {
+  //       maxAge: expirationTime * 60 * 60000,
+  //       httpOnly: true,
+  //     });
+  //     res.status(200).send("Login succesfully!");
+  //   }
+  // }
 });
 
-app.post('/token', async (req: any, res) => {
-  if (process.env.AUTHENTICATION_MGMT_METHOD == 'token') {
+app.post("/token", async (req: any, res) => {
+  if (process.env.AUTHENTICATION_MGMT_METHOD == "token") {
     const refreshToken = req.body?.refreshToken;
     if (refreshToken) {
-      jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET || '', (err: any, payload: any) => {
-        if (!err) {
-          const username = payload.name;
-          if (REFRESH_TOKENS[username] == refreshToken) {
-            const accessToken = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET || '', { expiresIn: `${expirationTime}h` });
-            return res.status(200).json({ accessToken });
+      jwt.verify(
+        refreshToken,
+        process.env.REFRESH_TOKEN_SECRET || "",
+        (err: any, payload: any) => {
+          if (!err) {
+            const username = payload.name;
+            if (REFRESH_TOKENS[username] == refreshToken) {
+              const accessToken = jwt.sign(
+                payload,
+                process.env.ACCESS_TOKEN_SECRET || "",
+                { expiresIn: `${expirationTime}h` }
+              );
+              return res.status(200).json({ accessToken });
+            }
           }
         }
-      });
+      );
     }
   }
-  return res.status(401).send('Unauthorized for this action!');
+  return res.status(401).send("Unauthorized for this action!");
 });
 
-app.post('/logout', async (req: any, res) => {
-  if (process.env.AUTHENTICATION_MGMT_METHOD == 'token') {
+app.post("/logout", async (req: any, res) => {
+  if (process.env.AUTHENTICATION_MGMT_METHOD == "token") {
     const username = req?.user?.name;
     delete VALID_TOKENS[username];
     delete REFRESH_TOKENS[username];
@@ -122,7 +245,7 @@ app.post('/logout', async (req: any, res) => {
     const actSession = await session.getSession();
     await session.deactivateSession(actSession);
   }
-  return res.send('200');
+  return res.send("200");
 });
 
 //ROUTES--------------------------------------------------
@@ -142,20 +265,22 @@ app.get("/getPosts", async (req, res) => {
 });
 
 // client-side query example: POST: 'http://localhost:3000/update-user/3069588493'; body: { address: 'Bugrashov 7, Tel-Aviv, Israel'}
-app.post('/update-user', async (req: any, res: any) => {
+app.post("/update-user", async (req: any, res: any) => {
   const { address, email } = req.body;
   const username = getUsernameByReq(req);
 
   // save new user data in database - by username
-  await UserModel.updateOne({
-    userName: username,
-  }, { address, email });
+  await UserModel.updateOne(
+    {
+      userName: username,
+    },
+    { address, email }
+  );
 
-  res.status(200).send('User updated successfully!');
+  res.status(200).send("User updated successfully!");
 });
 
-
-app.get('/get-user-profile/:username', async (req: any, res: any) => {
+app.get("/get-user-profile/:username", async (req: any, res: any) => {
   const username = getUsernameByReq(req);
 
   const user = await UserModel.findOne({
@@ -163,38 +288,18 @@ app.get('/get-user-profile/:username', async (req: any, res: any) => {
   });
   res.json(user);
 });
-app.get('/UsersOverview',  async (req: any, res: Response) => {
+app.get("/UsersOverview", async (req: any, res: Response) => {
   const username = getUsernameByReq(req);
   try {
     const sessions = await SessionModel.find();
-    let numsOfLogin :any = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
-    const currentDate = new Date();
-    sessions.forEach((session) => {
-      const createdDate = new Date();
-      createdDate.setTime(session?.createdDate as number);
-      
-      if(createdDate.getDay()===currentDate.getDay() && createdDate.getMonth()===currentDate.getMonth() && createdDate.getFullYear() === currentDate.getFullYear() ){
-        numsOfLogin[createdDate.getHours()]++;
-      }
-    });
-      res.status(200).send(numsOfLogin);
-  } catch (error) {
-    res.status(500).send(error);
-  }
-});
-
-app.get("/UserOverview", async (req: any, res: any) => {
-  const username = getUsernameByReq(req);
-  try{
-    const sessionUser = await SessionModel.find({userName:username});
     let numsOfLogin: any = [
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     ];
     const currentDate = new Date();
-    sessionUser.forEach((session) => {
+    sessions.forEach((session) => {
       const createdDate = new Date();
       createdDate.setTime(session?.createdDate as number);
-  
+
       if (
         createdDate.getDay() === currentDate.getDay() &&
         createdDate.getMonth() === currentDate.getMonth() &&
@@ -203,10 +308,36 @@ app.get("/UserOverview", async (req: any, res: any) => {
         numsOfLogin[createdDate.getHours()]++;
       }
     });
-    res.status(200).send({numsOfLogin, username});
+    res.status(200).send(numsOfLogin);
   } catch (error) {
-  res.status(500).send(error);
-}
+    res.status(500).send(error);
+  }
+});
+
+app.get("/UserOverview", async (req: any, res: any) => {
+  const username = getUsernameByReq(req);
+  try {
+    const sessionUser = await SessionModel.find({ userName: username });
+    let numsOfLogin: any = [
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    ];
+    const currentDate = new Date();
+    sessionUser.forEach((session) => {
+      const createdDate = new Date();
+      createdDate.setTime(session?.createdDate as number);
+
+      if (
+        createdDate.getDay() === currentDate.getDay() &&
+        createdDate.getMonth() === currentDate.getMonth() &&
+        createdDate.getFullYear() === currentDate.getFullYear()
+      ) {
+        numsOfLogin[createdDate.getHours()]++;
+      }
+    });
+    res.status(200).send({ numsOfLogin, username });
+  } catch (error) {
+    res.status(500).send(error);
+  }
 });
 //client-side query example: POST: 'http://localhost:3000/upload-post'; body: { postname, description, userName, data, image }
 
@@ -232,10 +363,9 @@ app.post("/upload-post", upload.single("image"), async (req: any, res) => {
   }
 });
 
-
-app.get('/Check', (req: Request, res: Response) => {
-  res.send('good check');
-})
+app.get("/Check", (req: Request, res: Response) => {
+  res.send("good check");
+});
 
 app.use("*", (req, res) => {
   res.render("not-found");
