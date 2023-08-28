@@ -26,10 +26,25 @@ export default function Login() {
     return handleOnChange;
   };
 
+  /**
+   * Additional explanation:
+   * The alternative solution for this onChange handlers can be define two separate functions for email change & password change:
+      const handleOnChangeEmail = (e: any) => {
+        setEmail(e.target.value);
+      };
+
+      const handleOnChangePassword = (e: any) => {
+        setPassword(e.target.value);
+      };
+   */
 
   const login = async () => {                                                                                 
     const response = await axiosClient.post('http://localhost:3031/login', { username: email, password }, { withCredentials: true });
     if (response?.status === 200) {
+      const accessToken = response?.data?.accessToken;
+      const refreshToken = response?.data?.refreshToken;
+      window.localStorage.setItem('accessToken', accessToken);
+      window.localStorage.setItem('refreshToken', refreshToken);
       dispatchAuthContext({ isLoggedIn: true });
       navigate('/Posts');
     } else {
