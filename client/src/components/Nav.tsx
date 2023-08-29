@@ -3,21 +3,25 @@ import { Outlet, useNavigate } from 'react-router-dom'
 import { FiInstagram } from 'react-icons/fi'
 import { useAuthContext } from '../contexts/authProvider'
 import { useCallback, useState } from 'react'
-import axios from 'axios'
+import apiClient from '../apiClient';
 
 const Nav = () => {
     const [isLoading, setIsLoading] = useState<boolean>(false)
     const { dispatch: dispatchAuthContext, isLoggedIn } = useAuthContext();
     const navigate = useNavigate();
 
-    const logout = useCallback(() => {
+    const logout = useCallback(async () => {
         setIsLoading(true);
         const deactivateSession = async () => {
-            await axios.post('http://localhost:3031/logout', {}, { withCredentials: true });
+            apiClient.post('http://localhost:3031/logout', {}, { withCredentials: true }).finally(() => {
+                window.localStorage.removeItem('accessToken');
+                window.localStorage.removeItem('refreshToken');
+            });
             dispatchAuthContext({ isLoggedIn: false });
             setIsLoading(false);
-        }
-        deactivateSession();
+        };
+
+        await deactivateSession();
         navigate('/Login');
     }, [dispatchAuthContext, navigate]);
 
@@ -44,4 +48,4 @@ const Nav = () => {
     )
 }
 
-export default Nav
+export default Nav;

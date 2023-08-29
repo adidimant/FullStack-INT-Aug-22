@@ -91,6 +91,11 @@ Link to recharts graphs for learning: https://recharts.org/en-US/examples/Percen
 
 SQL databases are primarily called Relational Databases (RDBMS); whereas NoSQL databases are primarily called non-relational or distributed databases. 
 
+# H.W 27/08:
+- Implement password encryption & password comparing when the user is logged in
+Read about it from here: https://www.npmjs.com/package/bcrypt
+The implementation should be full (mostly on the server side)
+
 <!-- sql: -->
 mysql,
 MariaDB,

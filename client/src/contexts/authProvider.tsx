@@ -11,9 +11,9 @@ type AuthContextType = {
 export const AuthContext = createContext<{ state: AuthContextType; dispatch: Dispatch<AuthContextType> }>({ state: { isLoggedIn: false, username:'' }, dispatch: () => undefined });
 
 const getDefaultAuthState = () => {
+  const isAccessToken = window.localStorage.getItem('accessToken'); 
   return {
-    isLoggedIn: false,
-    username:''
+    isLoggedIn: isAccessToken ? true : false,
   };
 };
 
@@ -25,22 +25,49 @@ const AuthHelper = function ({ children, authState, setAuthState }: { children: 
       ...authState,
       isLoggedIn: false,
     });
+    window.localStorage.removeItem('accessToken');
+    window.localStorage.removeItem('refreshToken');
     navigate('/login');
   }, [authState]);
 
   useLayoutEffect(() => {
-    const interceptor = apiClient.interceptors.response.use(
-      (res) => res,
-      (error: Error & { response: AxiosResponse }) => {
+    const interceptorRequests = apiClient.interceptors.request.use(
+      (req) => {
+        const accessToken = window.localStorage.getItem('accessToken');
+        if (accessToken) {
+          req.headers.Authorization = `Bearer ${accessToken}`;
+        }
+        return req;
+      },
+      (error: Error) => error,
+    );
+
+    const interceptorResponses = apiClient.interceptors.response.use(
+      (res: AxiosResponse) => res,
+      async (error: Error & { response: AxiosResponse }) => {
         if (error?.response?.status === 401) {
-          console.log(error);
-          logout();
+          const refreshToken = window.localStorage.getItem('refreshToken');
+          if (refreshToken) {
+            const response = await apiClient.post('http://localhost:3031/token', { refreshToken });
+            const accessToken = response?.data?.accessToken;
+            if (accessToken) {
+              window.localStorage.setItem('accessToken', accessToken);
+            } else {
+              logout();
+            }
+          } else {
+            console.log(error);
+            logout();
+          }
         }
         alert(`Error from server, status: ${error?.response?.status}`);
       }
     );
 
-    return () => apiClient.interceptors.response.eject(interceptor);
+    return () => {
+      apiClient.interceptors.request.eject(interceptorRequests);
+      apiClient.interceptors.response.eject(interceptorResponses);
+    }
   }, [authState]);
 
   return <>{children}</>;
