@@ -25,5 +25,6 @@ Installation steps:
 1) Install Docker software from here - https://docs.docker.com/get-docker/
 1.1) Install redis on windows: https://redis.io/docs/getting-started/installation/install-redis-on-windows/
 1.2) [If mac] - Install redis on mac: https://redis.io/docs/getting-started/installation/install-redis-on-mac-os/
-2) docker run -p 6379:6379 --env ALLOW_EMPTY_PASSWORD=yes -it redis/redis-stack-server:latest
+2) run `docker run -p 6379:6379 --env ALLOW_EMPTY_PASSWORD=yes -it redis/redis-stack-server:latest`
+
 [If you did steps 1.1 / 1.2 - you can check if your redis is running locally well by writing 'redis-cli' in the terminal and running some redis command (like `SETEX check1 43000 "check1value"`) ]
