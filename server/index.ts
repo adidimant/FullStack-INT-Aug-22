@@ -12,6 +12,13 @@ import connectDB from "./mongoose/connection_mongoDB";
 import { rate5Limiter, rate10Limiter, rate1800Limiter, rate20Limiter, rate30Limiter, rate3600Limiter, rate60Limiter } from './guards/RateLimit';
 import { SessionModel } from "./mongoose/SessionSchema";
 import { VALID_TOKENS, getUsernameByReq, authMiddleware, REFRESH_TOKENS } from "./guards/Authenticate";
+import { getClient } from "./redis/redis-client";
+import { RedisClientType } from "redis";
+
+let redisClient: RedisClientType;
+getClient().then((client) => {
+  redisClient = client;
+}).catch((err) => console.error(err));
 
 const SUPPORTED_AUTHENTICATION_MGMT_METHODS = ['token', 'session'];
 
