@@ -11,7 +11,7 @@ import { Session } from "./class/Session";
 import connectDB from "./mongoose/connection_mongoDB";
 import { rate5Limiter, rate10Limiter, rate1800Limiter, rate20Limiter, rate30Limiter, rate3600Limiter, rate60Limiter } from './guards/RateLimit';
 import { SessionModel } from "./mongoose/SessionSchema";
-import { VALID_TOKENS, getUsernameByReq, authMiddleware, REFRESH_TOKENS } from "./guards/Authenticate";
+import { getUsernameByReq, authMiddleware } from "./guards/Authenticate";
 import { getClient } from "./redis/redis-client";
 import { RedisClientType } from "redis";
 
@@ -90,11 +90,10 @@ app.post('/login', async (req: any, res: any) => {
 
   // const saltRounds = 10;
   // const hashedPassword = await bcrypt.hash(password, saltRounds);
-  // password = hashedPassword;
 
   // const actualUser = new UserModel({
   //   userName: username,
-  //   password,
+  //   password: hashedPassword,
   // });
   // await actualUser.save();
 
@@ -102,7 +101,7 @@ app.post('/login', async (req: any, res: any) => {
     userName: username,
   });
   if (!user) {
-    res.status(401).send('Bad username & password combination');
+    return res.status(401).send('Bad username & password combination');
   } else if (!user.password) {
     return res.status(500).send("User password is missing");
   }
@@ -110,14 +109,16 @@ app.post('/login', async (req: any, res: any) => {
   const match = await bcrypt.compare(password, user?.password as string);
 
   if (!match) {
-    res.status(401).send('Bad username & password combination');
+    return res.status(401).send('Bad username & password combination');
   } else {
     if (process.env.AUTHENTICATION_MGMT_METHOD == 'token') {
       const payload = { name: username };
+
       const accessToken = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET || '', { expiresIn: `${expirationTime}h` });
       const refreshToken = jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET || '');
-      VALID_TOKENS[username] = accessToken;
-      REFRESH_TOKENS[username] = refreshToken;
+      const tokensObjStr = JSON.stringify({ accessToken, refreshToken });
+      await redisClient.setEx(`tokens-${username}`, (process.env.REDIS_EXPIRATION_IN_SECONDS as number | any), tokensObjStr);
+
       res.status(200).json({ accessToken, refreshToken });
     } else { // process.env.AUTHENTICATION_MGMT_METHOD == 'session'
       const session = new Session(username, expirationTime, mongoose); // NOTE: Why create new session if session exists in DB??
@@ -134,11 +135,16 @@ app.post('/token', async (req: any, res) => {
   if (process.env.AUTHENTICATION_MGMT_METHOD == 'token') {
     const refreshToken = req.body?.refreshToken;
     if (refreshToken) {
-      jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET || '', (err: any, payload: any) => {
+      jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET || '', async (err: any, payload: any) => {
         if (!err) {
           const username = payload.name;
-          if (REFRESH_TOKENS[username] == refreshToken) {
+          const TokensinString = await redisClient.get(`tokens-${username}`);
+          const userTokens = JSON.parse(TokensinString as string);
+
+          if (userTokens?.refreshToken == refreshToken) {
             const accessToken = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET || '', { expiresIn: `${expirationTime}h` });
+            const TokensObj = {accessToken,refreshToken};
+            await redisClient.setEx(`tokens-${username}`,(process.env.REDIS_EXPIRATION_IN_SECONDS as number | any), JSON.stringify(TokensObj));
             return res.status(200).json({ accessToken });
           }
         }
@@ -151,8 +157,7 @@ app.post('/token', async (req: any, res) => {
 app.post('/logout', async (req: any, res) => {
   if (process.env.AUTHENTICATION_MGMT_METHOD == 'token') {
     const username = req?.user?.name;
-    delete VALID_TOKENS[username];
-    delete REFRESH_TOKENS[username];
+    await redisClient.DEL(`tokens-${username}`);
   } else {
     const sessionId = req.cookies?.sessionId;
     const session = new Session(null, expirationTime, mongoose, sessionId);
