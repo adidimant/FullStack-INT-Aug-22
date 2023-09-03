@@ -22,13 +22,17 @@ export async function authMiddleware(req: Request & { user: any }, res: Response
     const accessToken = authorizationHeader?.split(' ')[1] || '';
     
     jwt.verify(accessToken || '', process.env.ACCESS_TOKEN_SECRET || '', async (err, payload: any) => {
-      const TokensinString = await (redisClient as RedisClientType).get(`tokens-${payload?.name}`);
-      const userTokens = JSON.parse(TokensinString as string);
-      if (!err && userTokens.accessToken === accessToken) {
+
+      if(!err){
+        const TokensinString = await (redisClient as RedisClientType).get(`tokens-${payload?.name}`);
+        const userTokens = JSON.parse(TokensinString as string);
+      
+        if ( userTokens.accessToken === accessToken) {
         req.user = payload;
         passedAuthorization = true;
         next();
       }
+    }
     });
 
   } else { // process.env.AUTHENTICATION_MGMT_METHOD == 'session'

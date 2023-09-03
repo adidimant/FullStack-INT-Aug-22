@@ -123,12 +123,12 @@ let ma:boolean=false;
       const tokensObjStr = JSON.stringify({ accessToken, refreshToken });
       // option 1:
       await (redisClient as RedisClientType).setEx(`tokens-${username}`, (process.env.REDIS_EXPIRATION_IN_SECONDS as number | any), tokensObjStr);
-      const userTokensStr: string |null = await (redisClient as RedisClientType).get(`tokens-${username}`);
-      try {
-        const userTokens = JSON.parse(userTokensStr as string);
-      } catch(err) {
-        console.log('error in parsing: ' + err);
-      }
+      // const userTokensStr: string |null = await (redisClient as RedisClientType).get(`tokens-${username}`);
+      // try {
+      //   const userTokens = JSON.parse(userTokensStr as string);
+      // } catch(err) {
+      //   console.log('error in parsing: ' + err);
+      // }
       // option 2:
       // await (redisClient as RedisClientType).hSet(`users-tokens`,username, tokensObjStr);
       // const userTokensStr2: string | undefined = await (redisClient as RedisClientType).hGet('users-tokens', username);
