@@ -138,13 +138,13 @@ app.post('/token', async (req: any, res) => {
       jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET || '', async (err: any, payload: any) => {
         if (!err) {
           const username = payload.name;
-          const TokensinString = await (redisClient as RedisClientType).get(`tokens-${username}`);
+          const TokensinString = await redisClient.get(`tokens-${username}`);
           const userTokens = JSON.parse(TokensinString as string);
 
           if (userTokens?.refreshToken == refreshToken) {
             const accessToken = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET || '', { expiresIn: `${expirationTime}h` });
             const TokensObj = {accessToken,refreshToken};
-            await (redisClient as RedisClientType).setEx(`tokens-${username}`,(process.env.REDIS_EXPIRATION_IN_SECONDS as number | any), JSON.stringify(TokensObj));
+            await redisClient.setEx(`tokens-${username}`,(process.env.REDIS_EXPIRATION_IN_SECONDS as number | any), JSON.stringify(TokensObj));
             return res.status(200).json({ accessToken });
           }
         }
@@ -157,7 +157,7 @@ app.post('/token', async (req: any, res) => {
 app.post('/logout', async (req: any, res) => {
   if (process.env.AUTHENTICATION_MGMT_METHOD == 'token') {
     const username = req?.user?.name;
-    await (redisClient as RedisClientType).DEL(`tokens-${username}`);
+    await redisClient.DEL(`tokens-${username}`);
   } else {
     const sessionId = req.cookies?.sessionId;
     const session = new Session(null, expirationTime, mongoose, sessionId);
