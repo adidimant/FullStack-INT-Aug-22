@@ -1,4 +1,4 @@
-import express, { Request, Response, json } from "express";
+import express, { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import mongoose from "mongoose";
 import multer from "multer";
