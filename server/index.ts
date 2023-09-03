@@ -15,8 +15,8 @@ import { VALID_TOKENS, getUsernameByReq, authMiddleware, REFRESH_TOKENS } from "
 import { getClient } from "./redis/redis-client";
 import { RedisClientType } from "redis";
 
-let redisClient: RedisClientType;
-getClient().then((client) => {
+export let redisClient: RedisClientType | any;
+getClient().then((client:any) => {
   redisClient = client;
 }).catch((err) => console.error(err));
 
@@ -116,8 +116,8 @@ app.post('/login', async (req: any, res: any) => {
       const payload = { name: username };
       const accessToken = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET || '', { expiresIn: `${expirationTime}h` });
       const refreshToken = jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET || '');
-      VALID_TOKENS[username] = accessToken;
-      REFRESH_TOKENS[username] = refreshToken;
+      await (redisClient as RedisClientType).hSet(username,'accessToken',accessToken);
+      await (redisClient as RedisClientType).hSet(username,'refreshToken',refreshToken);
       res.status(200).json({ accessToken, refreshToken });
     } else { // process.env.AUTHENTICATION_MGMT_METHOD == 'session'
       const session = new Session(username, expirationTime, mongoose); // NOTE: Why create new session if session exists in DB??
@@ -134,11 +134,12 @@ app.post('/token', async (req: any, res) => {
   if (process.env.AUTHENTICATION_MGMT_METHOD == 'token') {
     const refreshToken = req.body?.refreshToken;
     if (refreshToken) {
-      jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET || '', (err: any, payload: any) => {
+      jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET || '', async (err: any, payload: any) => {
         if (!err) {
           const username = payload.name;
-          if (REFRESH_TOKENS[username] == refreshToken) {
+          if ((redisClient as RedisClientType).hGet(username,'refreshToken') == refreshToken) {
             const accessToken = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET || '', { expiresIn: `${expirationTime}h` });
+            await (redisClient as RedisClientType).hSet(username,'accessToken',accessToken);
             return res.status(200).json({ accessToken });
           }
         }
@@ -151,8 +152,7 @@ app.post('/token', async (req: any, res) => {
 app.post('/logout', async (req: any, res) => {
   if (process.env.AUTHENTICATION_MGMT_METHOD == 'token') {
     const username = req?.user?.name;
-    delete VALID_TOKENS[username];
-    delete REFRESH_TOKENS[username];
+    await (redisClient as RedisClientType).DEL(username);
   } else {
     const sessionId = req.cookies?.sessionId;
     const session = new Session(null, expirationTime, mongoose, sessionId);
