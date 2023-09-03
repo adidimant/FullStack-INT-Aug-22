@@ -11,7 +11,7 @@ import { Session } from "./class/Session";
 import connectDB from "./mongoose/connection_mongoDB";
 import { rate5Limiter, rate10Limiter, rate1800Limiter, rate20Limiter, rate30Limiter, rate3600Limiter, rate60Limiter } from './guards/RateLimit';
 import { SessionModel } from "./mongoose/SessionSchema";
-import { VALID_TOKENS, getUsernameByReq, authMiddleware, REFRESH_TOKENS } from "./guards/Authenticate";
+import { getUsernameByReq, authMiddleware } from "./guards/Authenticate";
 import { getClient } from "./redis/redis-client";
 import { RedisClientType } from "redis";
 
@@ -90,11 +90,10 @@ app.post('/login', async (req: any, res: any) => {
 
   // const saltRounds = 10;
   // const hashedPassword = await bcrypt.hash(password, saltRounds);
-  // password = hashedPassword;
 
   // const actualUser = new UserModel({
   //   userName: username,
-  //   password,
+  //   password: hashedPassword,
   // });
   // await actualUser.save();
 
@@ -102,47 +101,23 @@ app.post('/login', async (req: any, res: any) => {
     userName: username,
   });
   if (!user) {
-    res.status(401).send('Bad username & password combination');
+    return res.status(401).send('Bad username & password combination');
   } else if (!user.password) {
     return res.status(500).send("User password is missing");
   }
-let ma:boolean=false;
-  const match = await bcrypt.compare(password, user?.password as string,(err,result)=>{
-    ma=result;
-    console.log(result);
-    
-  });
 
-  if (ma) {
-    res.status(401).send('Bad username & password combination');
+  const match = await bcrypt.compare(password, user?.password as string);
+
+  if (!match) {
+    return res.status(401).send('Bad username & password combination');
   } else {
     if (process.env.AUTHENTICATION_MGMT_METHOD == 'token') {
       const payload = { name: username };
+
       const accessToken = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET || '', { expiresIn: `${expirationTime}h` });
       const refreshToken = jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET || '');
       const tokensObjStr = JSON.stringify({ accessToken, refreshToken });
-      // option 1:
-      await (redisClient as RedisClientType).setEx(`tokens-${username}`, (process.env.REDIS_EXPIRATION_IN_SECONDS as number | any), tokensObjStr);
-      // const userTokensStr: string |null = await (redisClient as RedisClientType).get(`tokens-${username}`);
-      // try {
-      //   const userTokens = JSON.parse(userTokensStr as string);
-      // } catch(err) {
-      //   console.log('error in parsing: ' + err);
-      // }
-      // option 2:
-      // await (redisClient as RedisClientType).hSet(`users-tokens`,username, tokensObjStr);
-      // const userTokensStr2: string | undefined = await (redisClient as RedisClientType).hGet('users-tokens', username);
-      // if(userTokensStr2) {
-      //   const userTokens2 = JSON.parse(userTokensStr2);
-      // }
-      //Redis: {
-      //  'users-tokens': {
-      //    '3068897865': "{ accessToken: asdkhjb34fijh3nr, refreshToken: 324rhjfbrds }"
-      //  }
-      //}
-      // option 3:
-      // await (redisClient as RedisClientType).hSet(`users-access-tokens`,username, accessToken);
-      // await (redisClient as RedisClientType).hSet(`users-refresh-tokens`,username, refreshToken);
+      await redisClient.setEx(`tokens-${username}`, (process.env.REDIS_EXPIRATION_IN_SECONDS as number | any), tokensObjStr);
 
       res.status(200).json({ accessToken, refreshToken });
     } else { // process.env.AUTHENTICATION_MGMT_METHOD == 'session'
