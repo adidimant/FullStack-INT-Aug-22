@@ -16,7 +16,7 @@ import { getClient } from "./redis/redis-client";
 import { RedisClientType } from "redis";
 
 let redisClient: RedisClientType;
-getClient().then((client) => {
+getClient().then((client: RedisClientType) => {
   redisClient = client;
 }).catch((err) => console.error(err));
 
