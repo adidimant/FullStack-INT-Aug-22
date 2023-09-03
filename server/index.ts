@@ -1,4 +1,5 @@
 import express, { Request, Response } from "express";
+import bcrypt from "bcrypt";
 import mongoose from "mongoose";
 import multer from "multer";
 import axios from 'axios';
@@ -61,12 +62,34 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
+app.put("/register", async (req: any, res: any) => {
+  const saltRounds = 10;
+  try{
+  const email = req.body.email;
+  const hashedPassword = await bcrypt.hash(req.body.password, saltRounds);
+  const actualUser = new UserModel({
+    email,
+    password: hashedPassword,
+  });
+  await actualUser.save();
+    res.status(200).send("register succesfully!");
+  } catch {
+    res.status(409).send("The user exists, Enter with another email");
+  }
+});
+
 
 app.post('/login', async (req: any, res: any) => {
   const username = req.body.username;
-  const password = req.body.password;
-  
+  let password = req.body.password;
+
   // Uncomment this if this is your first login - for creating your username in the db
+  // FIRST ANSWER -REGISTRARION:
+
+  // const saltRounds = 10;
+  // const hashedPassword = await bcrypt.hash(password, saltRounds);
+  // password = hashedPassword;
+
   // const actualUser = new UserModel({
   //   userName: username,
   //   password,
@@ -75,10 +98,16 @@ app.post('/login', async (req: any, res: any) => {
 
   const user = await UserModel.findOne({
     userName: username,
-    password,
   });
-
   if (!user) {
+    res.status(401).send('Bad username & password combination');
+  } else if (!user.password) {
+    return res.status(500).send("User password is missing");
+  }
+
+  const match = await bcrypt.compare(password, user?.password as string);
+
+  if (!match) {
     res.status(401).send('Bad username & password combination');
   } else {
     if (process.env.AUTHENTICATION_MGMT_METHOD == 'token') {
