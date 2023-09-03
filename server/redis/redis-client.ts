@@ -1,4 +1,4 @@
-import { createClient } from 'redis';
+import { createClient, RedisClientType } from 'redis';
 
 const client = createClient();
 
@@ -17,7 +17,7 @@ async function connect() {
 
 connect();
 
-export async function getClient() {
+export async function getClient(): Promise<any> {
   await connectionPromise;
   return client;
 }

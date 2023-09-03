@@ -15,8 +15,8 @@ import { VALID_TOKENS, getUsernameByReq, authMiddleware, REFRESH_TOKENS } from "
 import { getClient } from "./redis/redis-client";
 import { RedisClientType } from "redis";
 
-export let redisClient: RedisClientType | any;
-getClient().then((client:any) => {
+let redisClient: RedisClientType;
+getClient().then((client: RedisClientType) => {
   redisClient = client;
 }).catch((err) => console.error(err));
 
