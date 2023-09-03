@@ -20,10 +20,11 @@ export async function authMiddleware(req: Request & { user: any }, res: Response
   if (process.env.AUTHENTICATION_MGMT_METHOD == 'token') {
     const authorizationHeader = req.headers.authorization; // 'Bearer <TOKEN>'
     const accessToken = authorizationHeader?.split(' ')[1] || '';
-    console.log(await (redisClient as RedisClientType).KEYS('*') );
     
     jwt.verify(accessToken || '', process.env.ACCESS_TOKEN_SECRET || '', async (err, payload: any) => {
-      if (!err && await (redisClient as RedisClientType).hGet((payload as any)?.name,'accessToken')  == accessToken) {
+      const TokensinString = await (redisClient as RedisClientType).get(`tokens-${payload?.name}`);
+      const userTokens = JSON.parse(TokensinString as string);
+      if (!err && userTokens.accessToken === accessToken) {
         req.user = payload;
         passedAuthorization = true;
         next();
