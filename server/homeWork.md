@@ -96,6 +96,12 @@ SQL databases are primarily called Relational Databases (RDBMS); whereas NoSQL d
 Read about it from here: https://www.npmjs.com/package/bcrypt
 The implementation should be full (mostly on the server side)
 
+# H.W 30/08:
+- Go over again the redis-client.ts file implementation - you should know very well what we did with the promise & what is the redis library doing behind the scene.
+- Implement cache in redis, that stores the VALID_TOKENS & REFRESH_TOKENS in redis (instead of saving this in the service memory)
+- You should use SETX & GET or HSET & HGET functions, define the proper table.
+- Suggest other redis functions altervatives for that solution.
+
 <!-- sql: -->
 mysql,
 MariaDB,
