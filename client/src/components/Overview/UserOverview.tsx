@@ -13,6 +13,7 @@ import axiosClient from "../../apiClient";
 export default function UserOverview() {
   const [userName, setUserName] = useState("");
   const cardinal = curveCardinal.tension(0.2);
+  const [refreshData, setRefreshData] = useState(false);
   const [loginsOvertime, setloginsOvertime] = useState([
     {
       time: "00:00",
@@ -125,13 +126,25 @@ export default function UserOverview() {
     setUserName(data.username);
   };
 
+  const refreshUserData = () => {
+    setRefreshData(true);
+  };
+
   useEffect(() => {
     getDataFromServer();
   }, []);
 
+  useEffect(() => {
+    if(refreshData) {
+      getDataFromServer();
+      setRefreshData(false);
+    }
+  }, [refreshData]);
+
   return (
     <>
       <h6>Number of logins of the user: {userName} per hour</h6>
+      <button onClick={refreshUserData}>Refresh Data</button>
       <AreaChart
         width={600}
         height={300}

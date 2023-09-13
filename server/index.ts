@@ -36,8 +36,8 @@ if (!SUPPORTED_AUTHENTICATION_MGMT_METHODS.includes(process.env.AUTHENTICATION_M
 connectDB();
 
 app.use(cors({ credentials: true, origin: true, maxAge: 2592000, optionSuccessStatus: 200 }));
-app.use(express.json());
 app.use(rate5Limiter, rate10Limiter, rate20Limiter, rate30Limiter, rate60Limiter, rate1800Limiter, rate3600Limiter);
+app.use(express.json());
 app.use(cookieParser());
 app.set("view engine", "ejs");
 app.use("/images", express.static('Images'));
